@@ -1,0 +1,12 @@
+BASE_OF_STACK equ 0x7c00 
+
+BaseOfLoader	equ	0x800
+OffsetOfLoader	equ	0x00
+
+PHYSICAL_LOADER_ADDR equ 0x8000
+PHYSICAL_KERNEL_ADDR equ 0xf000
+
+
+;; paging
+PAGE_DIR_BASE		equ	0x100000
+PAGE_TBL_BASE		equ	0x101000
