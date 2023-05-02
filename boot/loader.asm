@@ -169,10 +169,10 @@ _Get_SVGA_VBE_INFO_Succ:
     ; 开始获取  SVGA 模式信息
 	mov	ax,	0x00
 	mov	es,	ax
-	mov	si,	0x900e
+	mov	si,	PHYSICAL_SVGA_ADDR + 0x100e
 
 	mov	esi,	dword	[es:si]
-	mov	edi,	0x9200
+	mov	edi,	PHYSICAL_SVGA_ADDR + 0x1200
 
 Label_SVGA_Mode_Info_Get:
 	mov	cx,	word	[es:esi]

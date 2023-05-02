@@ -1,8 +1,9 @@
+%include "load.inc"
+
 [bits 16]
-org     0x7c00 				;指明程序的偏移的基地址
+org     PHYSICAL_MBR_ADDR 				;指明程序的偏移的基地址
 global _start
 
-%include "load.inc"
 
 _start:
     ; [step 1] 初始化寄存器
