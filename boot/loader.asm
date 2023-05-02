@@ -14,15 +14,14 @@ _start:
 	mov dl,0				;设置显示列
     call DispStr16		
 
+    ; [step 2] 获取内存信息，并存于 PHYSICAL_MEMORY_STRUCT_BUFFER_ADDR 处
+    call ReadMem
 
-    ; [step 2] 显示开始 load 日志
-    mov si,LoadKernelToMemMessage			
-    mov dh,2				;设置显示行
-	mov dl,0				;设置显示列
-    call DispStr16		
+    ; ; [step 3] SVGA 相关信息处理
+    ; call ReadSVGA
+    ; jmp _pause
 
-
-    ; [step 3] 开启 A20,进入保护模式
+    ; [step 4] 开启 A20,进入保护模式
     ; 关中断
 	cli
 
@@ -34,20 +33,18 @@ _start:
     or al, 00000010b
     out 92h, al
 
-    ; [step 4] 读取 kernel 程序
-    mov eax, 20 	                ; 第20个逻辑扇区开始
-    mov ebx, PHYSICAL_KERNEL_ADDR	; 内存地址
-    mov ecx, 10   	                ; 读取100个扇区
-    call ReadLBA16
-
     ; [step 5] 把 cr0 的最低位置为 1，开启保护模式
     mov eax, cr0
     or eax, 0x1
     mov cr0, eax
       
-    ; 进入保护模式
+    ; 进入临时保护模式
     jmp SelectorCode32:_start32
  
+_pause:
+    hlt
+    jmp _pause
+
 
 ; ------------------------------------------------------------------------
 ; 显示字符串函数:DispStr16
@@ -80,80 +77,176 @@ DispStr16:
             int 0x10			;调用BIOS中断操作显卡。输出字符串
             ret
 
+
 ; ------------------------------------------------------------------------
-; 读取磁盘:ReadLBA16
-; 参数:
-; eax=LBA扇区号
-; ebx=将数据写入的内存地址
-; ecx=读入的扇区数
+; 读取内存信息 
+; 参数 : 无
 ; ------------------------------------------------------------------------	
-ReadLBA16:
-      mov esi,eax	  ;备份eax
-      mov di,cx		  ;备份cx
-;读写硬盘:
-;第1步：设置要读取的扇区数
-      mov dx,0x1f2
-      mov al,cl
-      out dx,al            ; 读取的扇区数
+ReadMem:
+    ; [step 1]  log
+    mov si,StartGetMemStructMessage			
+    mov dh,2				;设置显示行
+	mov dl,0				;设置显示列
+    call DispStr16		
 
-      mov eax,esi	       ; 恢复ax
+    ; [step 2] 设置寄存器
+	mov	ebx,	0
+	mov	ax,	0x00
+	mov	es,	ax
+	mov	di,	PHYSICAL_MEMORY_STRUCT_BUFFER_ADDR	
 
-;第2步：将LBA地址存入0x1f3 ~ 0x1f6
+_Label_Get_Mem_Struct:
+	mov	eax,	0x0E820
+	mov	ecx,	20
+	mov	edx,	0x534D4150
+	int	15h
 
-      ;LBA地址7~0位写入端口0x1f3
-      mov dx,0x1f3                       
-      out dx,al                          
+	jc	_Label_Get_Mem_Fail
+	add	di,	20
+	inc	dword	[MemStructNumber]
 
-      ;LBA地址15~8位写入端口0x1f4
-      mov cl,8
-      shr eax,cl
-      mov dx,0x1f4
-      out dx,al
+	cmp	ebx,	0
+	jne	_Label_Get_Mem_Struct
+	jmp	_Label_Get_Mem_OK
 
-      ;LBA地址23~16位写入端口0x1f5
-      shr eax,cl
-      mov dx,0x1f5
-      out dx,al
+_Label_Get_Mem_Fail:
+	mov	dword	[MemStructNumber],	0
 
-      shr eax,cl
-      and al,0x0f	   ;lba第24~27位
-      or al,0xe0	   ; 设置7～4位为1110,表示lba模式
-      mov dx,0x1f6
-      out dx,al
+    ; log
+    mov si,GetMemStructErrMessage			
+    mov dh,3				;设置显示行
+	mov dl,0				;设置显示列
+    call DispStr16		
+_Label_Get_Mem_OK:
+    ; log
+    mov si,GetMemStructOKMessage			
+    mov dh,3				;设置显示行
+	mov dl,0				;设置显示列
+    call DispStr16		
 
-;第3步：向0x1f7端口写入读命令，0x20 
-      mov dx,0x1f7
-      mov al,0x20                        
-      out dx,al
+    ret
 
-;第4步：检测硬盘状态
-  .not_ready:
-      ;同一端口，写时表示写入命令字，读时表示读入硬盘状态
-      nop
-      in al,dx
-      and al,0x88	        ;第4位为1表示硬盘控制器已准备好数据传输，第7位为1表示硬盘忙
-      cmp al,0x08
-      jnz .not_ready	    ;若未准备好，继续等。
 
-;第5步：从0x1f0端口读数据
-      mov ax, di
-      mov dx, 256
-      mul dx
-      mov cx, ax	    ; di为要读取的扇区数，一个扇区有512字节，每次读入一个字，
-			            ; 共需di*512/2次，所以di*256
-      mov dx, 0x1f0
-  .go_on_read:
-      in ax,dx
-      mov [bx],ax
-      add bx,2		  
-      loop .go_on_read
-      ret
 
+; ------------------------------------------------------------------------
+; 获取 SVGA 信息 
+; 参数 : 无
+; ------------------------------------------------------------------------	
+ReadSVGA:
+    ; log
+    mov si,StartGetSVGAVBEInfoMessage			
+    mov dh,4				;设置显示行
+	mov dl,0				;设置显示列
+    call DispStr16		
+
+    ;  获取 VBE 信息
+	mov	ax,	0x00
+	mov	es,	ax
+	mov	di,	PHYSICAL_SVGA_ADDR
+	mov	ax,	4F00h
+
+	int	10h
+	cmp	ax,	004Fh
+	jz	_Get_SVGA_VBE_INFO_Succ
+	
+    ;  获取 VBE 信息失败
+    ; log
+    mov si,GetSVGAVBEInfoErrMessage		
+    mov dh,5				;设置显示行
+	mov dl,0				;设置显示列
+    call DispStr16		
+
+    ret
+
+_Get_SVGA_VBE_INFO_Succ:
+    ;log
+    mov si,StartGetSVGAModeInfoMessage		
+    mov dh,5				;设置显示行
+	mov dl,0				;设置显示列
+    call DispStr16		
+
+
+    ; 开始获取  SVGA 模式信息
+	mov	ax,	0x00
+	mov	es,	ax
+	mov	si,	0x900e
+
+	mov	esi,	dword	[es:si]
+	mov	edi,	0x9200
+
+Label_SVGA_Mode_Info_Get:
+	mov	cx,	word	[es:esi]
+	
+	cmp	cx,	0FFFFh
+	jz	Label_SVGA_Mode_Info_Finish
+
+	mov	ax,	4F01h
+	int	10h
+
+	cmp	ax,	004Fh
+
+	jnz	Label_SVGA_Mode_Info_FAIL	
+
+	inc	dword		[SVGAModeCounter]
+	add	esi,	2
+	add	edi,	0x100
+
+	jmp	Label_SVGA_Mode_Info_Get
+		
+Label_SVGA_Mode_Info_FAIL:
+    ; log
+    mov si,GetSVGAModeInfoErrMessage		
+    mov dh,6				;设置显示行
+	mov dl,0				;设置显示列
+    call DispStr16		
+
+
+Label_SVGA_Mode_Info_Finish:
+    ;log
+    mov si,StartSEtSvgaModeMessage	
+    mov dh,6				;设置显示行
+	mov dl,0				;设置显示列
+    call DispStr16		
+
+    ; 开始设置 SVGA
+	mov	ax,	4F02h
+	mov	bx,	4180h	;========================mode : 0x180 or 0x143
+	int 	10h
+
+	cmp	ax,	004Fh
+	jnz	Label_SET_SVGA_Mode_VESA_VBE_FAIL
+    ret
+
+
+Label_SET_SVGA_Mode_VESA_VBE_FAIL:
+    mov si,SetSvgaModeFailedMessage	
+    mov dh,7				;设置显示行
+	mov dl,0				;设置显示列
+    call DispStr16		
+
+    ret
 
 [SECTION .data16]
 StartLoaderMessage:	            db	"Start Loader",0
-LoadKernelToMemMessage:	        db	"load kernel to memery succ",0
 
+StartGetMemStructMessage:	    db	"Start Get Memory Struct (address,size,type).",0
+GetMemStructErrMessage:	        db	"Get Memory Struct ERROR",0
+GetMemStructOKMessage:	        db	"Get Memory Struct SUCCESSFUL!",0
+
+StartGetSVGAVBEInfoMessage:	db	"Start Get SVGA VBE Info",0
+GetSVGAVBEInfoErrMessage:	db	"Get SVGA VBE Info ERROR",0
+GetSVGAVBEInfoOKMessage:	db	"Get SVGA VBE Info SUCCESSFUL!",0
+
+StartGetSVGAModeInfoMessage:	db	"Start Get SVGA Mode Info",0
+GetSVGAModeInfoErrMessage:	db	"Get SVGA Mode Info ERROR",0
+GetSVGAModeInfoOKMessage:	db	"Get SVGA Mode Info SUCCESSFUL!",0
+
+StartSEtSvgaModeMessage: db "start to set SVGA mode",0
+SetSvgaModeFailedMessage: db "set SVGA failed mode",0
+
+
+SVGAModeCounter		dd	0
+MemStructNumber		dd	0
 
 ;===================================================================================================================================
 ; 32 位 GDT
@@ -221,7 +314,7 @@ _start32:
     ; [step 3] 测试是否支持长模式 
 	call	if_enter_long_mode
 	test	eax,	eax
-	jz	Pause
+	jz	_pause32
 
     ; [step 4] 初始化临时页表
 	mov	dword	[0x90000],	0x91007
@@ -264,18 +357,13 @@ _start32:
 	bts	eax,	31
 	mov	cr0,	eax
 
-    mov ebx, PrepareEnterLongModeMessage            ; 被打印字符的地址
-    mov ax, 4
-    mov cx,0
-    call DispStr32
-
     ; [step 10]  跳转进入临时长模式
 	jmp	SelectorCode64:_start64
 
-Pause:
+_pause32:
     hlt
 
-    jmp Pause
+    jmp _pause32
 
 
 ;************************************************************8
@@ -287,12 +375,12 @@ if_enter_long_mode:
 	cpuid
 	cmp	eax,	0x80000001
 	setnb	al	
-	jb	if_enter_long_mode_done
+	jb	_if_enter_long_mode_done
 	mov	eax,	0x80000001
 	cpuid
 	bt	edx,	29
 	setc	al
-if_enter_long_mode_done:
+_if_enter_long_mode_done:
 	movzx	eax,	al
 	ret
 
@@ -307,13 +395,13 @@ PrintA20:
     mov [edi], edi
     mov eax, [esi]
     cmp eax, edi
-    je A20_DISABLE
+    je _A20_DISABLE
 
     mov ebx, aA20_ENABLE
     mov ax,0
     mov cx,0
     call DispStr32
-A20_DISABLE:
+_A20_DISABLE:
     mov ebx, aA20_DISABLE
     mov ax,0
     mov cx,0
@@ -341,15 +429,15 @@ DispStr32:
     mov edx, eax            ; 显存的地址
 
     mov ah, 0x0f            ; ah 为打印的颜色属性，0x0f为白字黑底
-loop1_begin:
+_loop1_begin:
     mov al, [ebx]           ; al为被打印的字符
     cmp al, 0               ; 若al为0，结束打印
-    je loop1_end
+    je _loop1_end
     mov [edx], ax           ; 向显存中写入字符及其颜色属性（2字节）
     inc ebx
     add edx, 2
-    jmp loop1_begin
-loop1_end:
+    jmp _loop1_begin
+_loop1_end:
     ret
 
 [SECTION .data32]
@@ -400,13 +488,21 @@ _start64:
     mov ecx, 0
     call DispStr64
 
+
+    ; [step 3] 读取 kernel 程序
+    mov eax, 20 	                ; 第20个逻辑扇区开始
+    mov ebx, PHYSICAL_KERNEL_ADDR	; 内存地址
+    mov ecx, 100   	                ; 读取100个扇区
+    call ReadLBA28
+
+    ; [step 4] 进入内核
     jmp PHYSICAL_KERNEL_ADDR
 
     ; jmp Pause64
 
-Pause64:
+_pause64:
     hlt
-    jmp Pause64
+    jmp _pause64
 
 ;************************************************************8
 ; 函数： 在长模式下打印字符串 
@@ -427,16 +523,86 @@ DispStr64:
     mov rdx, rax            ; 显存的地址
 
     mov ah, 0x0f            ; ah 为打印的颜色属性，0x0f为白字黑底
-loop1_begin64:
+_loop1_begin64:
     mov al, [ebx]           ; al为被打印的字符
     cmp al, 0               ; 若al为0，结束打印
-    je loop1_end64
+    je _loop1_end64
     mov [edx], ax           ; 向显存中写入字符及其颜色属性（2字节）
     inc ebx
     add edx, 2
-    jmp loop1_begin64
-loop1_end64:
+    jmp _loop1_begin64
+_loop1_end64:
     ret
+
+; ------------------------------------------------------------------------
+; 读取磁盘:ReadLBA28
+; 参数:
+; eax=LBA扇区号
+; ebx=将数据写入的内存地址
+; ecx=读入的扇区数
+; ------------------------------------------------------------------------	
+ReadLBA28:
+      mov esi,eax	  ;备份eax
+      mov di,cx		  ;备份cx
+;读写硬盘:
+;第1步：设置要读取的扇区数
+      mov dx,0x1f2
+      mov al,cl
+      out dx,al            ; 读取的扇区数
+
+      mov eax,esi	       ; 恢复ax
+
+;第2步：将LBA地址存入0x1f3 ~ 0x1f6
+
+      ;LBA地址7~0位写入端口0x1f3
+      mov dx,0x1f3                       
+      out dx,al                          
+
+      ;LBA地址15~8位写入端口0x1f4
+      mov cl,8
+      shr eax,cl
+      mov dx,0x1f4
+      out dx,al
+
+      ;LBA地址23~16位写入端口0x1f5
+      shr eax,cl
+      mov dx,0x1f5
+      out dx,al
+
+      shr eax,cl
+      and al,0x0f	   ;lba第24~27位
+      or al,0xe0	   ; 设置7～4位为1110,表示lba模式
+      mov dx,0x1f6
+      out dx,al
+
+;第3步：向0x1f7端口写入读命令，0x20 
+      mov dx,0x1f7
+      mov al,0x20                        
+      out dx,al
+
+;第4步：检测硬盘状态
+  .not_ready:
+      ;同一端口，写时表示写入命令字，读时表示读入硬盘状态
+      nop
+      in al,dx
+      and al,0x88	        ;第4位为1表示硬盘控制器已准备好数据传输，第7位为1表示硬盘忙
+      cmp al,0x08
+      jnz .not_ready	    ;若未准备好，继续等。
+
+;第5步：从0x1f0端口读数据
+      mov ax, di
+      mov dx, 256
+      mul dx
+      mov cx, ax	    ; di为要读取的扇区数，一个扇区有512字节，每次读入一个字，
+			            ; 共需di*512/2次，所以di*256
+      mov dx, 0x1f0
+  .go_on_read:
+      in ax,dx
+      mov [ebx],ax
+      add ebx,2		  
+      loop .go_on_read
+      ret
+
 
 
 [SECTION .data64]

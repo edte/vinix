@@ -37,7 +37,7 @@ _start:
     ; [step 5] 读取 loader 程序
     mov eax, 0x1 	                ; 第1个逻辑扇区开始
     mov ebx, PHYSICAL_LOADER_ADDR   ; 内存地址
-    mov ecx, 10   	                ; 读取10个扇区
+    mov ecx, 10   	                ; 读取10个扇区, 5k 大小限制
     call ReadLBA16
 
     ; [step 6] 跳转到 loader 程序
