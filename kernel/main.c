@@ -279,11 +279,11 @@
 // // 定义 GDT 指针
 // extern gdt_ptr_t GDT_POINTER;
 
-// void print(int a, int b, char *str);
+#include "lib.h"
 
 void kernel_main(void) {
-    int *add = (int *)0xb8000;
-    *((char *)add) = (char)0xf0;
+    clear();
+    print(0, 0, "enter kernel main");
 
     // // 获取 GDT 说明信息
     // uint16_t size = GDT_POINTER.limit + 1;
@@ -308,7 +308,7 @@ void kernel_main(void) {
     // itoa(addr, buffer, 16);
     // print(11, 0, buffer);
 
-    *((char *)add + 1024) = (char)0xf0;
+    // *((char *)add + 1024) = (char)0xf0;
 
     // int i = 1 / 0;
     while (1)

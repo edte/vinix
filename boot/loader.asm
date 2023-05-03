@@ -2,7 +2,6 @@
 org PHYSICAL_LOADER_ADDR
 jmp _start
 
-
 ;===================================================================================================================================
 ; 16 位实模式代码
 [SECTION .code16]
@@ -20,10 +19,6 @@ _start:
     ; [step 3] SVGA 相关信息处理
     ; call ReadSVGA
     
-    
-
-    ; jmp _pause
-
     ; [step 4] 开启 A20,进入保护模式
     ; 关中断
 	cli
@@ -246,7 +241,6 @@ GetSVGAModeInfoOKMessage:	db	"Get SVGA Mode Info SUCCESSFUL!",0
 
 StartSEtSvgaModeMessage: db "start to set SVGA mode",0
 SetSvgaModeFailedMessage: db "set SVGA failed mode",0
-
 
 SVGAModeCounter		dd	0
 MemStructNumber		dd	0
