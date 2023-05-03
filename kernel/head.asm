@@ -1,18 +1,21 @@
+
 global _start	
-; org 0xf000
+extern	kernel_main
 
 [section .text]	
+
 ALIGN	64
 [bits 64]
 _start:	
     mov ebx, EnterKernelMessage
-    mov eax,10
+    mov eax,8
     mov ecx,0
-    call DispStr64
+    call DispStr
 
-Pause:
-    hlt
-    jmp Pause
+    ; 设置新的栈
+    mov rsp,  _stack_start 
+
+    jmp kernel_main
 
 
 ;************************************************************8
@@ -22,7 +25,7 @@ Pause:
 ;       rax: 行数
 ;       rcx, 列数
 ;************************************************************8
-DispStr64:
+DispStr:
     xor rcx, rcx            ; 清空 ecx
     
     mov rdx,80
@@ -34,17 +37,21 @@ DispStr64:
     mov rdx, rax            ; 显存的地址
 
     mov ah, 0x0f            ; ah 为打印的颜色属性，0x0f为白字黑底
-loop1_begin64:
+_loop1_begin64:
     mov al, [ebx]           ; al为被打印的字符
     cmp al, 0               ; 若al为0，结束打印
-    je loop1_end64
+    je _loop1_end64
     mov [edx], ax           ; 向显存中写入字符及其颜色属性（2字节）
     inc ebx
     add edx, 2
-    jmp loop1_begin64
-loop1_end64:
+    jmp _loop1_begin64
+_loop1_end64:
     ret
 
 
-[SECTION .data64]
-EnterKernelMessage db      "enter kernel", 0 
+[SECTION .data]
+EnterKernelMessage db      "enter kernel head", 0 
+
+
+[section .bss]
+_stack_start: resq 32768

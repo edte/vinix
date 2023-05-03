@@ -1,8 +1,11 @@
 ; 最终物理内存分布：
 
 ;|-----------------|
-;|	10000 ~ END    |
+;|	100000 ~ END    |
 ;|	   KERNEL	   |
+;|-----------------|
+;|  10000~100000   |
+;|   一些临时数据  |
 ;|-----------------|
 ;|	a000 ~ 10000   |
 ;|	  LOADER	   |
@@ -28,7 +31,7 @@ BASE_OF_STACK equ 0x7c00
 ; MBR 起始地址
 PHYSICAL_MBR_ADDR equ 0x7c00
 
-; 物理内存信息存放基址
+; 内存物理地址存放基址
 PHYSICAL_MEMORY_STRUCT_BUFFER_ADDR  equ 0x7e00
 
 ; svga 物理信息基础地址
@@ -42,6 +45,4 @@ BaseOfLoader	equ	0xa00
 OffsetOfLoader	equ	0x00
 
 ; kernel 程序的物理地址
-PHYSICAL_KERNEL_ADDR equ 0x10000
-
-
+PHYSICAL_KERNEL_ADDR equ 0x100000

@@ -17,8 +17,11 @@ _start:
     ; [step 2] 获取内存信息，并存于 PHYSICAL_MEMORY_STRUCT_BUFFER_ADDR 处
     call ReadMem
 
-    ; ; [step 3] SVGA 相关信息处理
+    ; [step 3] SVGA 相关信息处理
     ; call ReadSVGA
+    
+    
+
     ; jmp _pause
 
     ; [step 4] 开启 A20,进入保护模式
@@ -307,7 +310,7 @@ _start32:
 
     ; [step 2] 打印进入保护模式日志
     mov ebx, EnterProtectMessage             ; 被打印字符的地址
-    mov ax, 3
+    mov ax, 4
     mov cx,0
     call DispStr32
  
@@ -498,7 +501,7 @@ _start64:
     ; [step 4] 进入内核
     jmp PHYSICAL_KERNEL_ADDR
 
-    ; jmp Pause64
+    ; jmp _pause64
 
 _pause64:
     hlt

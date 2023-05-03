@@ -84,12 +84,12 @@ setup_IDT:
     shr rdx, 32
     lea rdi, [ IDT_Table ]
     mov rcx, 256
-rp_sidt:
+_rp_sidt:
     mov [rdi], rax
     mov [rdi+8], rdx
     add rdi, 0x10
     dec rcx
-    jne rp_sidt
+    jne _rp_sidt
 
 ; Define setup_TSS64 label
 setup_TSS64:
