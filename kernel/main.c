@@ -1,13 +1,29 @@
 #include "gdt.h"
+#include "idt.h"
 #include "lib.h"
+#include "type.h"
+
+extern void kernel_init();
+
+void kernel_main();
+
+void kernel_init(void) {
+    clear();
+    init_gdt();
+    init_idt();
+
+    goto entry;
+
+entry:
+
+    return;
+}
 
 void kernel_main(void) {
-    clear();
     print(0, 0, "enter kernel main");
 
-    init_gdt();
-
     // int i = 1 / 0;
-    while (1)
-        ;
+
+    for (;;) {
+    }
 }

@@ -1,109 +1,38 @@
-#ifndef _ORANGES_GATE_H_
-#define _ORANGES_GATE_H_
+#ifndef _ORANGES_GDT_H_
+#define _ORANGES_GDT_H_
 
 #include "type.h"
 
-/* 存储段描述符/系统段描述符 */
-typedef struct s_descriptor /* 共 8 个字节 */
-{
-    u16 limit_low;       /* Limit */
-    u16 base_low;        /* Base */
-    u8 base_mid;         /* Base */
-    u8 attr1;            /* P(1) DPL(2) DT(1) TYPE(4) */
-    u8 limit_high_attr2; /* G(1) D(1) 0(1) AVL(1) LimitHigh(4) */
-    u8 base_high;        /* Base */
-} DESCRIPTOR;
+// GDT 段描述符结构体
+typedef struct {
+    u16 limit_low; // gdt 限长低 16 位
+    u16 base_low;  // gdt 起始地址低 16 位
+    u8 base_mid;   // gdt 起始地址中间 8 位
+    u16 attr;
+    u8 base_high; // gdt 起始地址高 8 位
+} __attribute__((packed)) gdt_entry_t;
 
-/* 门描述符 */
-typedef struct s_gate {
-    u16 offset_low;  /* Offset Low */
-    u16 selector;    /* Selector */
-    u8 dcount;       /* 该字段只在调用门描述符中有效。如果在利用
-                        调用门调用子程序时引起特权级的转换和堆栈
-                        的改变，需要将外层堆栈中的参数复制到内层
-                        堆栈。该双字计数字段就是用于说明这种情况
-                        发生时，要复制的双字参数的数量。*/
-    u8 attr;         /* P(1) DPL(2) DT(1) TYPE(4) */
-    u16 offset_high; /* Offset High */
-} GATE;
+// 段描述符属性
+#define SEG_G_Granularity (1 << 15)                // 设置段界限的单位，1-4KB，0-字节
+#define SEG_D_Default (1 << 14)                    // 控制是否是32位、16位的代码或数据段
+#define SEG_L_64Bit (1 << 13)                      // 控制是不是 64 位
+#define SEG_ALV_Available_To_Sys_Program (1 << 12) // todo:
+#define SEG_P_PRESENT (1 << 7)                     // 段是否存在
+#define SEG_DPL0 (0 << 5)                          // 特权级0，最高特权级
+#define SEG_DPL3 (3 << 5)                          // 特权级3，最低权限
+#define SEG_S_SYSTEM (0 << 4)                      // 是否是系统段，如调用门或者中断
+#define SEG_S_NORMAL (1 << 4)                      // 普通的代码段或数据段
+#define SEG_TYPE_CODE (1 << 3)                     // 指定其为代码段
+#define SEG_TYPE_DATA (0 << 3)                     // 数据段
+#define SEG_TYPE_RW (1 << 1)                       // 是否可写可读，不设置为只读
 
-typedef struct s_tss {
-    u32 backlink;
-    u32 esp0; /* stack pointer to use during interrupt */
-    u32 ss0;  /*   "   segment  "  "    "        "     */
-    u32 esp1;
-    u32 ss1;
-    u32 esp2;
-    u32 ss2;
-    u32 cr3;
-    u32 eip;
-    u32 flags;
-    u32 eax;
-    u32 ecx;
-    u32 edx;
-    u32 ebx;
-    u32 esp;
-    u32 ebp;
-    u32 esi;
-    u32 edi;
-    u32 es;
-    u32 cs;
-    u32 ss;
-    u32 ds;
-    u32 fs;
-    u32 gs;
-    u32 ldt;
-    u16 trap;
-    u16 iobase; /* I/O位图基址大于或等于TSS段界限，就表示没有I/O许可位图 */
-                /*u8	iomap[2];*/
-} TSS;
+#define reassembly(high, high_shift, mid, mid_shift, low) (((high) << (high_shift)) + ((mid) << (mid_shift)) + (low))
 
-/* GDT */
-/* 描述符索引 */
-#define INDEX_DUMMY 0   // ┓
-#define INDEX_FLAT_C 1  // ┣ LOADER 里面已经确定了的.
-#define INDEX_FLAT_RW 2 // ┃
-#define INDEX_VIDEO 3   // ┛
-#define INDEX_TSS 4
-#define INDEX_LDT_FIRST 5
-
-/* 选择子 */
-#define SELECTOR_DUMMY 0          // ┓
-#define SELECTOR_FLAT_C 0x08      // ┣ LOADER 里面已经确定了的.
-#define SELECTOR_FLAT_RW 0x10     // ┃
-#define SELECTOR_VIDEO (0x18 + 3) // ┛<-- RPL=3
-#define SELECTOR_TSS 0x20         // TSS. 从外层跳到内存时 SS 和 ESP 的值从里面获得.
-#define SELECTOR_LDT_FIRST 0x28
-
-#define SELECTOR_KERNEL_CS SELECTOR_FLAT_C
-#define SELECTOR_KERNEL_DS SELECTOR_FLAT_RW
-#define SELECTOR_KERNEL_GS SELECTOR_VIDEO
-
-// #define SELECTOR_KERNEL_CS 0x8
-// #define SELECTOR_KERNEL_DS 0x10
-
-/* 描述符类型值说明 */
-#define DA_32 0x4000       /* 32 位段				*/
-#define DA_LIMIT_4K 0x8000 /* 段界限粒度为 4K 字节			*/
-#define DA_DPL0 0x00       /* DPL = 0				*/
-#define DA_DPL1 0x20       /* DPL = 1				*/
-#define DA_DPL2 0x40       /* DPL = 2				*/
-#define DA_DPL3 0x60       /* DPL = 3				*/
-/* 存储段描述符类型值说明 */
-#define DA_DR 0x90   /* 存在的只读数据段类型值		*/
-#define DA_DRW 0x92  /* 存在的可读写数据段属性值		*/
-#define DA_DRWA 0x93 /* 存在的已访问可读写数据段类型值	*/
-#define DA_C 0x98    /* 存在的只执行代码段属性值		*/
-#define DA_CR 0x9A   /* 存在的可执行可读代码段属性值		*/
-#define DA_CCO 0x9C  /* 存在的只执行一致代码段属性值		*/
-#define DA_CCOR 0x9E /* 存在的可执行可读一致代码段属性值	*/
-/* 系统段描述符类型值说明 */
-#define DA_LDT 0x82      /* 局部描述符表段类型值			*/
-#define DA_TaskGate 0x85 /* 任务门类型值				*/
-#define DA_386TSS 0x89   /* 可用 386 任务状态段类型值		*/
-#define DA_386CGate 0x8C /* 386 调用门类型值			*/
-#define DA_386IGate 0x8E /* 386 中断门类型值			*/
-#define DA_386TGate 0x8F /* 386 陷阱门类型值			*/
+// GDT 指针结构体
+typedef struct {
+    u16 limit; // gdt 限长
+    u64 base;  // gdt 起始地址
+} __attribute__((packed)) gdt_ptr_t;
 
 /* 选择子类型值说明 */
 /* 其中, SA_ : Selector Attribute */
@@ -112,44 +41,33 @@ typedef struct s_tss {
 #define SA_RPL1 1
 #define SA_RPL2 2
 #define SA_RPL3 3
-
 #define SA_TI_MASK 0xFFFB
 #define SA_TIG 0
 #define SA_TIL 4
 
-/* 权限 */
-#define PRIVILEGE_KRNL 0
-#define PRIVILEGE_TASK 1
-#define PRIVILEGE_USER 3
 /* RPL */
 #define RPL_KRNL SA_RPL0
 #define RPL_TASK SA_RPL1
 #define RPL_USER SA_RPL3
 
-// GDT 描述符结构体
-typedef struct {
-    u16 limit_low;  // gdt 限长低 16 位
-    u16 base_low;   // gdt 起始地址低 16 位
-    u8 base_middle; // gdt 起始地址中间 8 位
-    u8 access;      // 访问标志
-    u8 granularity; // 段界限高 4 位和其它标志位
-    u8 base_high;   // gdt 起始地址高 8 位
-} __attribute__((packed)) gdt_entry_t;
-
-// GDT 指针结构体
-typedef struct {
-    u16 limit; // gdt 限长
-    u64 base;  // gdt 起始地址
-} __attribute__((packed)) gdt_ptr_t;
-
-// 定义 GDT 描述符数组
-extern gdt_entry_t GDT_Table[];
-
-// 定义 GDT 指针
-extern gdt_ptr_t GDT_POINTER;
-
-void init_gdt(void);
+// 选择子
+#define SELECTOR_KERNEL_CODE (1 * 8) // 内核代码段描述符
+#define SELECTOR_KERNEL_DATA (2 * 8) // 内核数据段描述符
+#define SELECTOR_USER_CODE (3 * 8)
+#define SELECTOR_USER_DATA (4 * 8)
+#define SELECTOR_TSS (5 * 8)
+#define SELECTOR_VIDEO (6 * 8)
+#define SELECTOR_KERNEL_STACK (7 * 8)
 
 #define GDT_TABLE_SIZE 256 // GDT表项数量
 
-#endif /* _ORANGES_GATE_H_ */
+// 定义 GDT 描述符数组
+static gdt_entry_t gdt_table[GDT_TABLE_SIZE];
+
+// 定义 GDT 指针
+static gdt_ptr_t gdt_pointer;
+
+// 初始化 gdt
+void init_gdt(void);
+
+#endif /* _ORANGES_GDT_H_ */

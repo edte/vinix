@@ -52,26 +52,4 @@ void general_protection();
 void page_fault();
 void copr_error();
 
-struct idt_entry {
-    u16 offset_lo;        // 中断处理程序在目标代码段内的偏移量（低 16 位）
-    u16 segment_selector; // 调用中断处理程序的代码段描述符选择子
-    u8 ist;               // 中断堆栈表索引（IST） （如果未使用，则为0）
-    u8 type_attr;         // 标志/类型
-    u16 offset_mid;       // 中断处理程序在目标代码段内的偏移量（中间16位）
-    u32 offset_hi : 32,   // 中断处理程序在目标代码段内的偏移量（高 32 位），全为 0。
-        reserved : 24;
-} __attribute__((packed));
-
-struct idt_descriptor {
-    u16 limit;  //   IDT 表限制大小
-    void *base; //   IDT 表基址指针
-} __attribute__((packed));
-
-// 定义 IDT 表和指针
-extern struct idt_entry IDT_Table[];
-extern struct idt_descriptor IDT_POINTER;
-
-// 函数原型，汇编语言实现
-void lidt(void *);
-
 #endif /* _ORANGES_IRQ_H_ */

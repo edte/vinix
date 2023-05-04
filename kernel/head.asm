@@ -1,20 +1,57 @@
 global _start	
+extern	kernel_init
 extern	kernel_main
+
+
+; 选择子
+%define SELECTOR_KERNEL_CODE (1 * 8) 
+%define SELECTOR_KERNEL_DATA (2 * 8) 
+%define SELECTOR_USER_CODE (3 * 8)
+%define SELECTOR_USER_DATA (4 * 8)
+%define SELECTOR_TSS (5 * 8)
+%define SELECTOR_VIDEO (6 * 8)
+%define SELECTOR_KERNEL_STACK (7 * 8)
+
+; 栈大小
+%define KERNEL_STACK_SIZE 1<<15 
 
 [section .text]	
 
 ALIGN	64
 [bits 64]
-_start:	
+_start:
     mov ebx, EnterKernelMessage
     mov eax,8
     mov ecx,0
     call DispStr
 
+    ; 初始化内核
+    call kernel_init 
+    
+    ; 设置新的 gdt 寄存器
+    mov ax, SELECTOR_KERNEL_DATA 
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+
+    mov ax,SELECTOR_VIDEO
+    mov gs, ax
+
+    mov ax,SELECTOR_KERNEL_STACK
+    mov ss,ax
+
     ; 设置新的栈
     mov rsp,  _stack_start 
 
+    ; 开始内核
+    jmp  _entry
+
+_entry:
     jmp kernel_main
+
+_pause:
+    hlt
+    jmp _pause
 
 
 ;************************************************************8
@@ -50,7 +87,8 @@ _loop1_end64:
 
 [SECTION .data]
 EnterKernelMessage db      "enter kernel head", 0 
+tt db "testtesttest",0
 
 
 [section .bss]
-_stack_start: resq 32768
+_stack_start: resq KERNEL_STACK_SIZE

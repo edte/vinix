@@ -26,6 +26,10 @@ _start:
     ; 加载 GDTR
 	lgdt	[GdtPtr]
 
+    ; 加载 idt
+    lidt	[IDT_POINTER]
+
+
     ; 开启 A20
     in al, 92h
     or al, 00000010b
@@ -286,6 +290,15 @@ SelectorCode32	equ	gdt_code - gdt_start
 SelectorData32	equ	gdt_data - gdt_start
 SelectorStack32	equ	gdt_stack - gdt_start
 
+
+; ------------------  idt -----------------------
+IDT:
+	times	0x50	dq	0
+IDT_END:
+
+IDT_POINTER:
+		dw	IDT_END - IDT - 1
+		dd	IDT
 
 [SECTION .code32]
 ALIGN	32
