@@ -1,155 +1,133 @@
-#include "irq.h"
-// #include "gate.h"
-#include "lib.h"
+#include "../include/irq.h"
+#include "../include/idt.h"
+#include "../include/lib.h"
 
-/*======================================================================*
-                            init_8259A
- *======================================================================*/
-// void init_8259A() {
-//     out_byte(INT_M_CTL, 0x11);                // Master 8259, ICW1.
-//     out_byte(INT_S_CTL, 0x11);                // Slave  8259, ICW1.
-//     out_byte(INT_M_CTLMASK, INT_VECTOR_IRQ0); // Master 8259, ICW2. 设置 '主8259' 的中断入口地址为 0x20.
-//     out_byte(INT_S_CTLMASK, INT_VECTOR_IRQ8); // Slave  8259, ICW2. 设置 '从8259' 的中断入口地址为 0x28
-//     out_byte(INT_M_CTLMASK, 0x4);             // Master 8259, ICW3. IR2 对应 '从8259'.
-//     out_byte(INT_S_CTLMASK, 0x2);             // Slave  8259, ICW3. 对应 '主8259' 的 IR2.
-//     out_byte(INT_M_CTLMASK, 0x1);             // Master 8259, ICW4.
-//     out_byte(INT_S_CTLMASK, 0x1);             // Slave  8259, ICW4.
+void exception_handler_unknown() { disp_str_raw(10, 0, "Unkown interrupt occurred"); }
 
-//     out_byte(INT_M_CTLMASK, 0xFF); // Master 8259, OCW1.
-//     out_byte(INT_S_CTLMASK, 0xFF); // Slave  8259, OCW1.
+// 除 0 异常程序
+void exception_handler_divider() { disp_str_raw(10, 0, "Devide Error"); }
 
-//     int i;
-//     // for (i = 0; i < NR_IRQ; i++) {
-//     //     irq_table[i] = spurious_irq;
-//     // }
-// }
+void exception_handler_Debug(void) { disp_str_raw(10, 0, "Debug exception"); };
+void exception_handler_NMI(void) { disp_str_raw(10, 0, "NMI exception"); };
+void exception_handler_breakpoint(void){};
+void exception_handler_overflow(void){};
+void exception_handler_bound_range(void){};
+void exception_handler_invalid_opcode(void){};
+void exception_handler_device_unavailable(void){};
+void exception_handler_double_fault(void){};
+void exception_handler_invalid_tss(void){};
+void exception_handler_segment_not_present(void){};
+void exception_handler_stack_segment_fault(void){};
+void exception_handler_general_protection(void){};
+void exception_handler_page_fault(void){};
+void exception_handler_fpu_error(void){};
+void exception_handler_alignment_check(void){};
+void exception_handler_machine_check(void){};
+void exception_handler_smd_exception(void){};
+void exception_handler_virtual_exception(void){};
 
-// /*======================================================================*
-//                            spurious_irq
-//  *======================================================================*/
-// void spurious_irq(int irq) {
-//     disp_str("spurious_irq: ");
-//     disp_int(irq);
-//     disp_str("\n");
-// }
+void init_irq() {
+    // 初始化所有异常
+    for (u32 i = 0; i < IDT_TABLE_SIZE; i++) {
+        irq_install(i, exception_handler_unknown);
+    }
 
-// /*======================================================================*
-//                            put_irq_handler
-//  *======================================================================*/
-// void put_irq_handler(int irq, irq_handler handler) {
-//     disable_irq(irq);
-//     irq_table[irq] = handler;
-// }
+    // 设置其他异常处理
+    irq_install(IRQ0_DE, exception_handler_divider);
+    irq_install(IRQ1_DB, exception_handler_Debug);
+    irq_install(IRQ2_NMI, exception_handler_NMI);
+    irq_install(IRQ3_BP, exception_handler_breakpoint);
+    irq_install(IRQ4_OF, exception_handler_overflow);
+    irq_install(IRQ5_BR, exception_handler_bound_range);
+    irq_install(IRQ6_UD, exception_handler_invalid_opcode);
+    irq_install(IRQ7_NM, exception_handler_device_unavailable);
+    irq_install(IRQ8_DF, exception_handler_double_fault);
+    irq_install(IRQ10_TS, exception_handler_invalid_tss);
+    irq_install(IRQ11_NP, exception_handler_segment_not_present);
+    irq_install(IRQ12_SS, exception_handler_stack_segment_fault);
+    irq_install(IRQ13_GP, exception_handler_general_protection);
+    irq_install(IRQ14_PF, exception_handler_page_fault);
+    irq_install(IRQ16_MF, exception_handler_fpu_error);
+    irq_install(IRQ17_AC, exception_handler_alignment_check);
+    irq_install(IRQ18_MC, exception_handler_machine_check);
+    irq_install(IRQ19_XM, exception_handler_smd_exception);
+    irq_install(IRQ20_VE, exception_handler_virtual_exception);
+}
 
-// /*======================================================================*
-//                              init_idt_desc
-//  *----------------------------------------------------------------------*
-//  初始化 386 中断门
-//  *======================================================================*/
-// void init_idt_desc(unsigned char vector, u8 desc_type, int_handler handler, unsigned char privilege) {
-//     GATE *p_gate = &IDT_Table[vector];
-//     u32 base = (u32)handler;
-//     p_gate->offset_low = base & 0xFFFF;
-//     p_gate->selector = SELECTOR_KERNEL_CS;
-//     p_gate->dcount = 0;
-//     p_gate->attr = desc_type | (privilege << 5);
-//     p_gate->offset_high = (base >> 16) & 0xFFFF;
-// }
+// 安装中断或异常处理程序
+int irq_install(int irq_num, irq_handler_t handler) {
+    if (irq_num >= IDT_TABLE_SIZE) {
+        return -1;
+    }
 
-// /*======================================================================*
-//                             init_prot
-//  *======================================================================*/
-// void init_prot() {
-//     // 全部初始化成中断门(没有陷阱门)
-//     init_idt_desc(INT_VECTOR_DIVIDE, DA_386IGate, divide_error, PRIVILEGE_KRNL);
+    init_idt_entry(idt_table + irq_num, (u64)SELECTOR_KERNEL_CODE, handler, 0,
+                   GATE_P_PRESENT | GATE_DPL0 | GATE_TYPE_INTERRUPT);
 
-//     init_idt_desc(INT_VECTOR_DEBUG, DA_386IGate, single_step_exception, PRIVILEGE_KRNL);
+    return 0;
+}
 
-//     init_idt_desc(INT_VECTOR_NMI, DA_386IGate, nmi, PRIVILEGE_KRNL);
+void init_pic(void) {
+    // 边缘触发，级联，需要配置icw4, 8086模式
+    outb(PIC0_ICW1, PIC_ICW1_ALWAYS_1 | PIC_ICW1_ICW4);
 
-//     init_idt_desc(INT_VECTOR_BREAKPOINT, DA_386IGate, breakpoint_exception, PRIVILEGE_USER);
+    // 对应的中断号起始序号0x20
+    outb(PIC0_ICW2, IRQ_PIC_START);
 
-//     init_idt_desc(INT_VECTOR_OVERFLOW, DA_386IGate, overflow, PRIVILEGE_USER);
+    // 主片IRQ2有从片
+    outb(PIC0_ICW3, 1 << 2);
 
-//     init_idt_desc(INT_VECTOR_BOUNDS, DA_386IGate, bounds_check, PRIVILEGE_KRNL);
+    // 普通全嵌套、非缓冲、非自动结束、8086模式
+    outb(PIC0_ICW4, PIC_ICW4_8086);
 
-//     init_idt_desc(INT_VECTOR_INVAL_OP, DA_386IGate, inval_opcode, PRIVILEGE_KRNL);
+    // 边缘触发，级联，需要配置icw4, 8086模式
+    outb(PIC1_ICW1, PIC_ICW1_ICW4 | PIC_ICW1_ALWAYS_1);
 
-//     init_idt_desc(INT_VECTOR_COPROC_NOT, DA_386IGate, copr_not_available, PRIVILEGE_KRNL);
+    // 起始中断序号，要加上8
+    outb(PIC1_ICW2, IRQ_PIC_START + 8);
 
-//     init_idt_desc(INT_VECTOR_DOUBLE_FAULT, DA_386IGate, double_fault, PRIVILEGE_KRNL);
+    // 没有从片，连接到主片的IRQ2上
+    outb(PIC1_ICW3, 2);
 
-//     init_idt_desc(INT_VECTOR_COPROC_SEG, DA_386IGate, copr_seg_overrun, PRIVILEGE_KRNL);
+    // 普通全嵌套、非缓冲、非自动结束、8086模式
+    outb(PIC1_ICW4, PIC_ICW4_8086);
 
-//     init_idt_desc(INT_VECTOR_INVAL_TSS, DA_386IGate, inval_tss, PRIVILEGE_KRNL);
+    // 禁止所有中断, 允许从PIC1传来的中断
+    outb(PIC0_IMR, 0xFF & ~(1 << 2));
+    outb(PIC1_IMR, 0xFF);
+}
 
-//     init_idt_desc(INT_VECTOR_SEG_NOT, DA_386IGate, segment_not_present, PRIVILEGE_KRNL);
+void irq_enable(int irq_num) {
+    if (irq_num < IRQ_PIC_START) {
+        return;
+    }
 
-//     init_idt_desc(INT_VECTOR_STACK_FAULT, DA_386IGate, stack_exception, PRIVILEGE_KRNL);
+    irq_num -= IRQ_PIC_START;
+    if (irq_num < 8) {
+        uint8_t mask = inb(PIC0_IMR) & ~(1 << irq_num);
+        outb(PIC0_IMR, mask);
+    } else {
+        irq_num -= 8;
+        uint8_t mask = inb(PIC1_IMR) & ~(1 << irq_num);
+        outb(PIC1_IMR, mask);
+    }
+}
 
-//     init_idt_desc(INT_VECTOR_PROTECTION, DA_386IGate, general_protection, PRIVILEGE_KRNL);
+void irq_disable(int irq_num) {
+    if (irq_num < IRQ_PIC_START) {
+        return;
+    }
 
-//     init_idt_desc(INT_VECTOR_PAGE_FAULT, DA_386IGate, page_fault, PRIVILEGE_KRNL);
+    irq_num -= IRQ_PIC_START;
+    if (irq_num < 8) {
+        uint8_t mask = inb(PIC0_IMR) | (1 << irq_num);
+        outb(PIC0_IMR, mask);
+    } else {
+        irq_num -= 8;
+        uint8_t mask = inb(PIC1_IMR) | (1 << irq_num);
+        outb(PIC1_IMR, mask);
+    }
+}
 
-//     init_idt_desc(INT_VECTOR_COPROC_ERR, DA_386IGate, copr_error, PRIVILEGE_KRNL);
-// }
+void irq_disable_global(void) { cli(); }
 
-// /*======================================================================*
-//                             exception_handler
-//  *----------------------------------------------------------------------*
-//  异常处理
-//  *======================================================================*/
-// void exception_handler(int vec_no, int err_code, int eip, int cs, int eflags) {
-//     int *addr = (int *)0xb8000;
-//     // int i;
-
-//     *((char *)addr + 1024) = (char)0xf0;
-
-//     int disp_pos = 0;
-
-//     int i;
-//     int text_color = 0x74; /* 灰底红字 */
-
-//     char *err_msg[] = {"#DE Divide Error",
-//                        "#DB RESERVED",
-//                        "--  NMI Interrupt",
-//                        "#BP Breakpoint",
-//                        "#OF Overflow",
-//                        "#BR BOUND Range Exceeded",
-//                        "#UD Invalid Opcode (Undefined Opcode)",
-//                        "#NM Device Not Available (No Math Coprocessor)",
-//                        "#DF Double Fault",
-//                        "    Coprocessor Segment Overrun (reserved)",
-//                        "#TS Invalid TSS",
-//                        "#NP Segment Not Present",
-//                        "#SS Stack-Segment Fault",
-//                        "#GP General Protection",
-//                        "#PF Page Fault",
-//                        "--  (Intel reserved. Do not use.)",
-//                        "#MF x87 FPU Floating-Point Error (Math Fault)",
-//                        "#AC Alignment Check",
-//                        "#MC Machine Check",
-//                        "#XF SIMD Floating-Point Exception"};
-
-//     /* 通过打印空格的方式清空屏幕的前五行，并把 disp_pos 清零 */
-//     disp_pos = 0;
-//     for (i = 0; i < 80 * 5; i++) {
-//         disp_str(" ");
-//     }
-//     disp_pos = 0;
-
-//     disp_color_str("Exception! --> ", text_color);
-//     disp_color_str(err_msg[vec_no], text_color);
-//     disp_color_str("\n\n", text_color);
-//     disp_color_str("EFLAGS:", text_color);
-//     disp_int(eflags);
-//     disp_color_str("CS:", text_color);
-//     disp_int(cs);
-//     disp_color_str("EIP:", text_color);
-//     disp_int(eip);
-
-//     if (err_code != 0xFFFFFFFF) {
-//         disp_color_str("Error code:", text_color);
-//         disp_int(err_code);
-//     }
-// }
+void irq_enable_global(void) { sti(); }

@@ -1,13 +1,11 @@
-#include "idt.h"
-#include "gdt.h"
-#include "lib.h"
-#include "type.h"
-
-// 中断处理函数，在此仅输出一句话作为示例
-void handle_timer_interrupt(void) { print(3, 0, "Timer interrupt occurred\n"); }
+#include "../include/idt.h"
+#include "../include/gdt.h"
+#include "../include/irq.h"
+#include "../include/lib.h"
+#include "../include/type.h"
 
 // 设置门描述符
-void init_idt_entry(idt_entry_t *p_entry, uint64_t offset, uint16_t selector, uint8_t ist, uint8_t type_attr) {
+void init_idt_entry(idt_entry_t *p_entry, uint16_t selector, uint64_t offset, uint8_t ist, uint8_t type_attr) {
     p_entry->offset_low = (u16)offset;
     p_entry->offset_middle = (u16)(offset >> 16);
     p_entry->offset_high = (u32)(offset >> 32);
@@ -18,18 +16,16 @@ void init_idt_entry(idt_entry_t *p_entry, uint64_t offset, uint16_t selector, ui
 }
 
 void init_idt(void) {
-    print(1, 0, "enter init idt");
+    // 初始化所有中断
+    init_irq();
 
-    for (u32 i = 0; i < IDT_TABLE_SIZE; i++) {
-        init_idt_entry(idt_table + i, (uint64_t)handle_timer_interrupt, 0x08, 0, 0x8E);
-    }
-
+    // 设置指针
     idt_pointer.base = (u64)idt_table;
     idt_pointer.limit = sizeof(idt_table) - 1;
 
+    // 加载
     lidt();
 
-    int i = 2 / 0;
-
-    print(2, 0, "init idt succ");
+    // 初始化pic 控制器
+    init_pic();
 }

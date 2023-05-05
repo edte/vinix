@@ -2,7 +2,6 @@ global _start
 extern	kernel_init
 extern	kernel_main
 
-
 ; 选择子
 %define SELECTOR_KERNEL_CODE (1 * 8) 
 %define SELECTOR_KERNEL_DATA (2 * 8) 
@@ -83,6 +82,9 @@ _loop1_begin64:
     jmp _loop1_begin64
 _loop1_end64:
     ret
+
+
+
 
 
 [SECTION .data]

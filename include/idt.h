@@ -16,9 +16,9 @@
 // offset_high：中断处理程序的高 32 位偏移地址。
 // reserved：保留字段，始终设置为 0。
 typedef struct {
-    u16 offset_low; // 中断处理程序的低16位偏移地址
-    u16 selector;   // 中断处理程序所在代码段的段选择子
-    u8 ist;
+    u16 offset_low;    // 中断处理程序的低16位偏移地址
+    u16 selector;      // 中断处理程序所在代码段的段选择子
+    u8 ist;            // 中断栈表
     u8 type_attr;      // 中断类型和属性
     u16 offset_middle; // 中断处理程序的中间16位偏移地址
     u32 offset_high;   // 中断处理程序的高32位偏移地址
@@ -30,12 +30,21 @@ typedef struct {
     u64 base;  //   IDT 表基址指针
 } __attribute__((packed)) idt_ptr_t;
 
-#define GATE_TYPE_IDT (0xE << 8) // 中断32位门描述符
-#define GATE_P_PRESENT (1 << 15) // 是否存在
-#define GATE_DPL0 (0 << 13)      // 特权级0，最高特权级
-#define GATE_DPL3 (3 << 13)      // 特权级3，最低权限
+// 中断或异常类型（Type）宏定义
+#define GATE_TYPE_INTERRUPT 0xe // 中断门
+#define GATE_TYPE_TRAP 0xf      // 陷阱门
+#define GATE_TYPE_TASK 0x5      // 任务门
 
-#define IDT_TABLE_SIZE 256 // GDT表项数量
+// 特权级（DPL）宏定义
+#define GATE_DPL0 (0 << 5) // 最高特权级
+#define GATE_DPL1 (1 << 5)
+#define GATE_DPL2 (2 << 5)
+#define GATE_DPL3 (3 << 5) // 最低权限
+
+// 存在位（P）
+#define GATE_P_PRESENT (1 << 7) // 存在
+
+#define IDT_TABLE_SIZE 128 // GDT表项数量
 
 // 定义 IDT 表和指针
 static idt_entry_t idt_table[IDT_TABLE_SIZE];

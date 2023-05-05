@@ -59,7 +59,7 @@ typedef struct {
 #define SELECTOR_VIDEO (6 * 8)
 #define SELECTOR_KERNEL_STACK (7 * 8)
 
-#define GDT_TABLE_SIZE 256 // GDT表项数量
+#define GDT_TABLE_SIZE 128 // GDT表项数量
 
 // 定义 GDT 描述符数组
 static gdt_entry_t gdt_table[GDT_TABLE_SIZE];

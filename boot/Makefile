@@ -7,9 +7,6 @@ ASM_FLAGS	:= 	-I include/
 # objects
 TARGET 		:= boot.bin loader.bin
 
-# DISK := /dev/sdc
-DISK := os.img
-
 # Default starting position
 all: $(TARGET) 
 

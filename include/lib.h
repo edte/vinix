@@ -5,9 +5,6 @@
 #include "idt.h"
 #include "type.h"
 
-void print(int a, int b, char *str);
-void clear();
-
 static inline u8 inb(u16 port) {
     u8 rv;
     __asm__ __volatile__("inb %[p], %[v]" : [v] "=a"(rv) : [p] "d"(port));
@@ -48,5 +45,7 @@ static inline void far_jump(u32 selector, u32 offset) {
     u32 addr[] = {offset, selector};
     __asm__ __volatile__("ljmpl *(%[a])" ::[a] "r"(addr));
 }
+
+static inline void hlt(void) { __asm__ __volatile__("hlt"); }
 
 #endif /* _ORANGES_STDIO_H_ */

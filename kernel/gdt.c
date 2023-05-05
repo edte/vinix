@@ -1,5 +1,5 @@
-#include "gdt.h"
-#include "lib.h"
+#include "../include/gdt.h"
+#include "../include/lib.h"
 
 void gdt_entry_set(int selector, u32 base, u32 limit, u16 attr) {
     gdt_entry_t *desc = gdt_table + selector / sizeof(gdt_entry_t);
@@ -39,6 +39,7 @@ void init_gdt(void) {
     gdt_entry_set(SELECTOR_VIDEO, 0x00000000, 0xFFFFFFFF,
                   SEG_P_PRESENT | SEG_DPL0 | SEG_S_NORMAL | SEG_TYPE_DATA | SEG_TYPE_RW | SEG_L_64Bit);
 
+    // 设置 gdt 指针
     gdt_pointer.base = (u64)gdt_table;
     gdt_pointer.limit = sizeof(gdt_table) - 1;
 
