@@ -1,5 +1,5 @@
 #include "../include/gdt.h"
-#include "../include/lib.h"
+#include "../include/asm.h"
 
 void gdt_entry_set(int selector, u32 base, u32 limit, u16 attr) {
     gdt_entry_t *desc = gdt_table + selector / sizeof(gdt_entry_t);

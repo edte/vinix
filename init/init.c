@@ -1,7 +1,6 @@
 #include "../include/gdt.h"
 #include "../include/idt.h"
-#include "../include/lib.h"
-#include "../include/log.h"
+#include "../include/sprintf.h"
 #include "../include/type.h"
 
 extern void kernel_init();

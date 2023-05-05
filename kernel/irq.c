@@ -1,6 +1,8 @@
 #include "../include/irq.h"
+#include "../include/asm.h"
+#include "../include/gdt.h"
 #include "../include/idt.h"
-#include "../include/lib.h"
+#include "../include/sprintf.h"
 
 void exception_handler_unknown() { disp_str_raw(10, 0, "Unkown interrupt occurred"); }
 

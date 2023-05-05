@@ -2,3 +2,13 @@ os.img
 bx_enh_dbg.ini
 kernel.bin
 kernel.elf
+boot/boot.bin
+boot/loader.bin
+init/head.o
+init/init.o
+kernel/gdt.o
+kernel/idt.o
+kernel/irq.o
+kernel/sprintf.o
+lib/klib.o
+lib/screen.o

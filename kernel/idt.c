@@ -1,7 +1,7 @@
 #include "../include/idt.h"
+#include "../include/asm.h"
 #include "../include/gdt.h"
 #include "../include/irq.h"
-#include "../include/lib.h"
 #include "../include/type.h"
 
 // 设置门描述符

@@ -1,6 +1,6 @@
+#include "../include/sprintf.h"
+#include "../include/asm.h"
 #include "../include/klib.h"
-#include "../include/lib.h"
-#include "../include/log.h"
 
 /**
  * @brief 日志打印

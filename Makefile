@@ -27,9 +27,10 @@ pack: kernel.bin
 kernel.bin: kernel.elf
 	objcopy $(OBJCOPY_FLAGS) $< $@
 
+# TODO: 这里 ld 时，-e 指定入口程序失败，只能手动把 head 作为第一个链接的文件来跑，之后想办法解决
 kernel.elf: 
 	echo $(OBJECTS)
-	$(LD) $(LDFLAGS)  $(OBJECTS) -o $@
+	$(LD) $(LDFLAGS) ./init/head.o $(OBJECTS) -o $@
 
 flash:
 	sudo dd if=boot/boot.bin   of=$(DISK) bs=512 conv=notrunc count=1 

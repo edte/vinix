@@ -15,9 +15,6 @@ void kernel_itoa(char *buf, int num, int base);
 void kernel_sprintf(char *buffer, const char *fmt, ...);
 void kernel_vsprintf(char *buffer, const char *fmt, va_list args);
 
-void disp_str_raw(int a, int b, char *str);
-void clear();
-
 #ifndef RELEASE
 #define ASSERT(condition)                                                                                              \
     if (!(condition))                                                                                                  \

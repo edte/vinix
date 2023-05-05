@@ -5,6 +5,9 @@ void sprintf(const char *fmt, ...);
 
 void spanic(const char *file, int line, const char *func, const char *cond);
 
+void disp_str_raw(int a, int b, char *str);
+void clear();
+
 #define STR_DEFAULT_LEN 1024
 
 #endif /* _ORANGES_LOG_H_ */
