@@ -1,2 +1,4 @@
-./os.img
-./bx_enh_dbg.ini
+os.img
+bx_enh_dbg.ini
+kernel.bin
+kernel.elf
