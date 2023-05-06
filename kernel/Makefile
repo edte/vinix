@@ -7,7 +7,7 @@ ASMKFLAGS	:= -I ../include/  -f elf64
 CC_FLAGS 	:= -mcmodel=large  -fno-stack-protector -fno-builtin -m64 -c
 
 # var
-TARGET 	:=   gdt.o idt.o irq.o   sprintf.o 
+TARGET 	:=   gdt.o idt.o irq.o   kprint.o 
 
 # rules
 
@@ -23,7 +23,7 @@ idt.o: idt.c
 irq.o: irq.c	
 	$(CC) $(CC_FLAGS) -o $@ $<
 
-sprintf.o: sprintf.c
+kprint.o: kprint.c
 	$(CC) $(CC_FLAGS) -o $@ $<
 
 .PHONY: clean

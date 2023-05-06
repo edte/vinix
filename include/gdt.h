@@ -3,6 +3,9 @@
 
 #include "type.h"
 
+#define reassembly(high, high_shift, mid, mid_shift, low) (((high) << (high_shift)) + ((mid) << (mid_shift)) + (low))
+#define GDT_TABLE_SIZE 128 // GDT表项数量
+
 // GDT 段描述符结构体
 typedef struct {
     u16 limit_low; // gdt 限长低 16 位
@@ -26,25 +29,6 @@ typedef struct {
 #define SEG_TYPE_DATA (0 << 3)                     // 数据段
 #define SEG_TYPE_RW (1 << 1)                       // 是否可写可读，不设置为只读
 
-#define reassembly(high, high_shift, mid, mid_shift, low) (((high) << (high_shift)) + ((mid) << (mid_shift)) + (low))
-
-// GDT 指针结构体
-typedef struct {
-    u16 limit; // gdt 限长
-    u64 base;  // gdt 起始地址
-} __attribute__((packed)) gdt_ptr_t;
-
-/* 选择子类型值说明 */
-/* 其中, SA_ : Selector Attribute */
-#define SA_RPL_MASK 0xFFFC
-#define SA_RPL0 0
-#define SA_RPL1 1
-#define SA_RPL2 2
-#define SA_RPL3 3
-#define SA_TI_MASK 0xFFFB
-#define SA_TIG 0
-#define SA_TIL 4
-
 /* RPL */
 #define RPL_KRNL SA_RPL0
 #define RPL_TASK SA_RPL1
@@ -59,7 +43,22 @@ typedef struct {
 #define SELECTOR_VIDEO (6 * 8)
 #define SELECTOR_KERNEL_STACK (7 * 8)
 
-#define GDT_TABLE_SIZE 128 // GDT表项数量
+/* 选择子类型值说明 */
+/* 其中, SA_ : Selector Attribute */
+#define SA_RPL_MASK 0xFFFC
+#define SA_RPL0 0
+#define SA_RPL1 1
+#define SA_RPL2 2
+#define SA_RPL3 3
+#define SA_TI_MASK 0xFFFB
+#define SA_TIG 0
+#define SA_TIL 4
+
+// GDT 指针结构体
+typedef struct {
+    u16 limit; // gdt 限长
+    u64 base;  // gdt 起始地址
+} __attribute__((packed)) gdt_ptr_t;
 
 // 定义 GDT 描述符数组
 static gdt_entry_t gdt_table[GDT_TABLE_SIZE];

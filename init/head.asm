@@ -27,6 +27,10 @@ _start:
     ; 初始化内核
     call kernel_init 
     
+    ; TODO: 这里有问题，需要解决，暂时用着旧的栈
+    ; ; 设置新的栈
+    ; mov rsp,  kernel_stack_start 
+
     ; 设置新的 gdt 寄存器
     mov ax, SELECTOR_KERNEL_DATA 
     mov ds, ax
@@ -38,9 +42,6 @@ _start:
 
     mov ax,SELECTOR_KERNEL_STACK
     mov ss,ax
-
-    ; 设置新的栈
-    mov rsp,  _stack_start 
 
     ; 开始内核
     jmp  _entry
@@ -91,6 +92,4 @@ _loop1_end64:
 EnterKernelMessage db      "enter kernel head", 0 
 tt db "testtesttest",0
 
-
-[section .bss]
-_stack_start: resq KERNEL_STACK_SIZE
+; kernel_stack_start:     resb  KERNEL_STACK_SIZE

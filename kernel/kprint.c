@@ -1,11 +1,13 @@
-#include "../include/sprintf.h"
+#include "../include/kprint.h"
 #include "../include/asm.h"
 #include "../include/klib.h"
+
+void kprint(const char *fmt, ...) { kprintf(fmt); }
 
 /**
  * @brief 日志打印
  */
-void sprintf(const char *fmt, ...) {
+void kprintf(const char *fmt, ...) {
     char str_buf[128];
     va_list args;
 
@@ -15,7 +17,12 @@ void sprintf(const char *fmt, ...) {
     kernel_vsprintf(str_buf, fmt, args);
     va_end(args);
 
-    disp_str_raw(1, 0, str_buf);
+    if (disp_pos >= 30) {
+        disp_pos = 0;
+    }
+
+    disp_str_raw(disp_pos, 0, str_buf);
+    disp_pos++;
 
     // const char *p = str_buf;
     // while (*p != '\0') {
@@ -28,9 +35,14 @@ void sprintf(const char *fmt, ...) {
     // outb(COM1_PORT, '\n');
 }
 
+void kprintln(const char *fmt, ...) {
+    disp_pos++;
+    kprintf(fmt);
+}
+
 void spanic(const char *file, int line, const char *func, const char *cond) {
-    sprintf("assert failed! %s", cond);
-    sprintf("file: %s\nline %d\nfunc: %s\n", file, line, func);
+    kprintf("assert failed! %s", cond);
+    kprintf("file: %s\nline %d\nfunc: %s\n", file, line, func);
 
     for (;;) {
         hlt();

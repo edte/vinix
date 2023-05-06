@@ -54,4 +54,6 @@ static idt_ptr_t idt_pointer;
 // 初始化 idt
 void init_idt();
 
+void init_idt_entry(idt_entry_t *p_entry, uint16_t selector, uint64_t offset, uint8_t ist, uint8_t type_attr);
+
 #endif /* _ORANGES_IDT_H_ */
