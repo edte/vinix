@@ -17,27 +17,12 @@ void kprintf(const char *fmt, ...) {
     kernel_vsprintf(str_buf, fmt, args);
     va_end(args);
 
-    if (disp_pos >= 30) {
-        disp_pos = 0;
-    }
-
-    disp_str_raw(disp_pos, 0, str_buf);
-    disp_pos++;
-
-    // const char *p = str_buf;
-    // while (*p != '\0') {
-    //     while ((inb(COM1_PORT + 5) & (1 << 6)) == 0)
-    //         ;
-    //     outb(COM1_PORT, *p++);
-    // }
-
-    // outb(COM1_PORT, '\r');
-    // outb(COM1_PORT, '\n');
+    disp_str(str_buf);
 }
 
 void kprintln(const char *fmt, ...) {
-    disp_pos++;
     kprintf(fmt);
+    disp_str("\n");
 }
 
 void spanic(const char *file, int line, const char *func, const char *cond) {

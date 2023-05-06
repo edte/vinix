@@ -18,8 +18,7 @@ entry:
 }
 
 void kernel_main(void) {
-
-    int i = 1 / 0;
+    // int i = 1 / 0;
     // disp_str_raw(5, 0, "enter kernel main");
 
     // int *addr = (int *)0xb8000;

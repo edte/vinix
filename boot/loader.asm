@@ -498,7 +498,6 @@ _start64:
     mov ecx, 0
     call DispStr64
 
-
     ; [step 3] 读取 kernel 程序
     mov eax, 20 	                ; 第20个逻辑扇区开始
     mov ebx, PHYSICAL_KERNEL_ADDR	; 内存地址
@@ -513,6 +512,7 @@ _start64:
 _pause64:
     hlt
     jmp _pause64
+
 
 ;************************************************************8
 ; 函数： 在长模式下打印字符串 
@@ -543,6 +543,7 @@ _loop1_begin64:
     jmp _loop1_begin64
 _loop1_end64:
     ret
+
 
 ; ------------------------------------------------------------------------
 ; 读取磁盘:ReadLBA28

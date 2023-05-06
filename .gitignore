@@ -9,6 +9,7 @@ init/init.o
 kernel/gdt.o
 kernel/idt.o
 kernel/irq.o
-kernel/sprintf.o
+kernel/kprint.o
 lib/klib.o
 lib/screen.o
+os.img.lock
