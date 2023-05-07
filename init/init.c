@@ -1,6 +1,8 @@
+#include "../include/asm.h"
 #include "../include/gdt.h"
 #include "../include/idt.h"
 #include "../include/kprint.h"
+#include "../include/time.h"
 #include "../include/type.h"
 
 extern void kernel_init();
@@ -9,6 +11,9 @@ void kernel_init(void) {
     clear();
     init_gdt();
     init_idt();
+    init_time();
+
+    irq_enable_global();
 
     goto entry;
 

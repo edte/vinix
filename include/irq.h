@@ -80,32 +80,22 @@ void exception_handler_machine_check(irq_frame_t *frame);
 void exception_handler_smd_exception(irq_frame_t *frame);
 void exception_handler_virtual_exception(irq_frame_t *frame);
 
+void exception_handler_timer(irq_frame_t *frame);
+void exception_handler_keyboard(irq_frame_t *frame);
+
+void init_8259A();
 void irq_enable(int irq_num);
 void irq_disable(int irq_num);
 void irq_disable_global(void);
 void irq_enable_global(void);
 
-void init_pic(void);
-
 // PIC控制器相关的寄存器及位配置
-#define PIC0_ICW1 0x20
-#define PIC0_ICW2 0x21
-#define PIC0_ICW3 0x21
-#define PIC0_ICW4 0x21
-#define PIC0_OCW2 0x20
-#define PIC0_IMR 0x21
+#define PIC_M_CTRL 0x20 // 主片
+#define PIC_M_DATA 0x21
+#define PIC_S_CTRL 0xA0 // 从片
+#define PIC_S_DATA 0xA1
 
-#define PIC1_ICW1 0xa0
-#define PIC1_ICW2 0xa1
-#define PIC1_ICW3 0xa1
-#define PIC1_ICW4 0xa1
-#define PIC1_OCW2 0xa0
-#define PIC1_IMR 0xa1
-
-#define PIC_ICW1_ICW4 (1 << 0)     // 1 - 需要初始化ICW4
-#define PIC_ICW1_ALWAYS_1 (1 << 4) // 总为1的位
-#define PIC_ICW4_8086 (1 << 0)     // 8086工作模式
-
-#define IRQ_PIC_START 0x20 // PIC中断起始号
+#define IRQ_PIC_M_TIMER 0x20
+#define IRQ_PIC_M_KERBOARD 0x21
 
 #endif /* _ORANGES_IRQ_H_ */

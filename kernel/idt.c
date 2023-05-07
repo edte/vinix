@@ -21,8 +21,7 @@ void irq_install(int irq_num, irq_handler_t handler) {
         return;
     }
 
-    init_idt_entry(idt_table + irq_num, SELECTOR_KERNEL_CODE, (u64)handler, 0,
-                   GATE_P_PRESENT | GATE_DPL0 | GATE_TYPE_INTERRUPT);
+    init_idt_entry(idt_table + irq_num, SELECTOR_KERNEL_CODE, (u64)handler, 0, GATE_P_PRESENT | GATE_DPL0 | GATE_TYPE_INTERRUPT);
 
     return;
 }
@@ -54,6 +53,9 @@ void init_idt(void) {
     irq_install(IRQ19_XM, exception_handler_smd_exception);
     irq_install(IRQ20_VE, exception_handler_virtual_exception);
 
+    irq_install(IRQ_PIC_M_TIMER, exception_handler_timer);
+    irq_install(IRQ_PIC_M_KERBOARD, exception_handler_keyboard);
+
     // 设置指针
     idt_pointer.base = (u64)idt_table;
     idt_pointer.limit = sizeof(idt_table) - 1;
@@ -62,5 +64,5 @@ void init_idt(void) {
     lidt();
 
     // 初始化pic 控制器
-    init_pic();
+    init_8259A();
 }

@@ -44,7 +44,7 @@ typedef struct {
 // 存在位（P）
 #define GATE_P_PRESENT (1 << 7) // 存在
 
-#define IDT_TABLE_SIZE 128 // GDT表项数量
+#define IDT_TABLE_SIZE 256 // GDT表项数量
 
 // 定义 IDT 表和指针
 static idt_entry_t idt_table[IDT_TABLE_SIZE];

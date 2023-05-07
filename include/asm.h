@@ -23,6 +23,8 @@ static inline void cli() { __asm__ __volatile__("cli"); }
 
 static inline void sti() { __asm__ __volatile__("sti"); }
 
+static inline void iretq() { __asm__ __volatile__("iretq"); }
+
 static inline void lgdt() { __asm__ __volatile__("lgdt %[g]" ::[g] "m"(gdt_pointer)); }
 
 static inline void lidt() { __asm__ __volatile__("lidt %[g]" ::[g] "m"(idt_pointer)); }

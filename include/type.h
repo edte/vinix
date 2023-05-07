@@ -11,4 +11,8 @@ typedef unsigned short uint16_t;
 typedef unsigned int uint32_t;
 typedef unsigned long uint64_t;
 
+#define bool int
+#define true 1
+#define false 0
+
 #endif /* _ORANGES_TYPE_H_ */

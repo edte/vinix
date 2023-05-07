@@ -3,6 +3,7 @@
 #include "../include/gdt.h"
 #include "../include/idt.h"
 #include "../include/kprint.h"
+#include "../include/time.h"
 
 static void dump_core_regs(irq_frame_t *frame) {
     kprintln("rax:0x%x\n"
@@ -19,6 +20,7 @@ static void dump_core_regs(irq_frame_t *frame) {
 }
 
 static void do_default_handler(irq_frame_t *frame, const char *message) {
+    disp_pos = 0;
     kprintln("-------------------------------------------------------");
     kprintln("IRQ/Exception happend: %s", message);
     dump_core_regs(frame);
@@ -52,66 +54,45 @@ void exception_handler_machine_check(irq_frame_t *frame) { do_default_handler(fr
 void exception_handler_smd_exception(irq_frame_t *frame) { do_default_handler(frame, "SIMD Floating Point Exception."); };
 void exception_handler_virtual_exception(irq_frame_t *frame) { do_default_handler(frame, "Virtualization Exception."); };
 
-void init_pic(void) {
-    // 边缘触发，级联，需要配置icw4, 8086模式
-    outb(PIC0_ICW1, PIC_ICW1_ALWAYS_1 | PIC_ICW1_ICW4);
+void exception_handler_timer(irq_frame_t *frame) {
+    sys_tick++;
 
-    // 对应的中断号起始序号0x20
-    outb(PIC0_ICW2, IRQ_PIC_START);
-
-    // 主片IRQ2有从片
-    outb(PIC0_ICW3, 1 << 2);
-
-    // 普通全嵌套、非缓冲、非自动结束、8086模式
-    outb(PIC0_ICW4, PIC_ICW4_8086);
-
-    // 边缘触发，级联，需要配置icw4, 8086模式
-    outb(PIC1_ICW1, PIC_ICW1_ICW4 | PIC_ICW1_ALWAYS_1);
-
-    // 起始中断序号，要加上8
-    outb(PIC1_ICW2, IRQ_PIC_START + 8);
-
-    // 没有从片，连接到主片的IRQ2上
-    outb(PIC1_ICW3, 2);
-
-    // 普通全嵌套、非缓冲、非自动结束、8086模式
-    outb(PIC1_ICW4, PIC_ICW4_8086);
-
-    // 禁止所有中断, 允许从PIC1传来的中断
-    outb(PIC0_IMR, 0xFF & ~(1 << 2));
-    outb(PIC1_IMR, 0xFF);
+    kprintln("%d", sys_tick);
+    iretq();
 }
 
-void irq_enable(int irq_num) {
-    if (irq_num < IRQ_PIC_START) {
-        return;
-    }
-
-    irq_num -= IRQ_PIC_START;
-    if (irq_num < 8) {
-        uint8_t mask = inb(PIC0_IMR) & ~(1 << irq_num);
-        outb(PIC0_IMR, mask);
-    } else {
-        irq_num -= 8;
-        uint8_t mask = inb(PIC1_IMR) & ~(1 << irq_num);
-        outb(PIC1_IMR, mask);
-    }
+void exception_handler_keyboard(irq_frame_t *frame) {
+    outb(0x20, 0x61);
+    uint16_t scancode = inb(0x60);
+    kprintln("");
+    kprintln("%d", scancode);
+    outb(0x20, 0x20);
+    outb(0xa0, 0x20);
+    iretq();
 }
 
-void irq_disable(int irq_num) {
-    if (irq_num < IRQ_PIC_START) {
-        return;
-    }
+/*======================================================================*
+                            init_8259A
+ *======================================================================*/
+void init_8259A() {
+    // 初始化主片
+    outb(PIC_M_CTRL, 0x11); // ICW1: 0001 0001 ,边沿触发，级联 8259，需要ICW4
+    outb(PIC_M_DATA, 0x20); // ICW2: 0010 0000 ,起始中断向量号为 0x20(0x20-0x27)
+    outb(PIC_M_DATA, 0x04); // ICW3: 0000 0100 ,IR2 接从片
+    outb(PIC_M_DATA, 0x01); // ICW4: 0000 0001 ,8086 模式，正常EOI
 
-    irq_num -= IRQ_PIC_START;
-    if (irq_num < 8) {
-        uint8_t mask = inb(PIC0_IMR) | (1 << irq_num);
-        outb(PIC0_IMR, mask);
-    } else {
-        irq_num -= 8;
-        uint8_t mask = inb(PIC1_IMR) | (1 << irq_num);
-        outb(PIC1_IMR, mask);
-    }
+    // 初始化从片
+    outb(PIC_S_CTRL, 0x11); // ICW1: 0001 0001 ,边沿触发，级联 8259，需要ICW4
+    outb(PIC_S_DATA, 0x28); // ICW2: 0010 1000 ,起始中断向量号为 0x28(0x28-0x2f)
+    outb(PIC_S_DATA, 0x02); // ICW3: 0000 0010 ,设置连接到主片的 IR2 引脚
+    outb(PIC_S_DATA, 0x01); // ICW4: 0000 0001 ,8086 模式，正常EOI
+
+    /* IRQ2用于级联从片,必须打开,否则无法响应从片上的中断
+    主片上打开的中断有IRQ0的时钟,IRQ1的键盘和级联从片的IRQ2,其它全部关闭 */
+    outb(PIC_M_DATA, 0xf8);
+
+    /* 打开从片上的IRQ14,此引脚接收硬盘控制器的中断 */
+    outb(PIC_S_DATA, 0xff);
 }
 
 void irq_disable_global(void) { cli(); }
