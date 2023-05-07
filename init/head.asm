@@ -11,6 +11,9 @@ extern	kernel_main
 %define SELECTOR_VIDEO (6 * 8)
 %define SELECTOR_KERNEL_STACK (7 * 8)
 
+%define kernel_stack_start 50000
+%define kernel_stack_start 0x7c00
+
 ; 栈大小
 %define KERNEL_STACK_SIZE 1<<15 
 

@@ -20,7 +20,10 @@ build:
 	cd boot && make
 	cd lib && make
 	cd init && make
-	cd kernel && make
+	cd cpu && make
+	cd interupt && make
+	cd mm && make
+	cd device && make
 
 pack: kernel.bin
 
@@ -45,9 +48,12 @@ run:
 
 clean:
 	cd boot && make clean
-	cd init && make clean
 	cd lib && make clean
-	cd kernel && make clean
+	cd init && make clean
+	cd cpu && make clean
+	cd interupt && make clean
+	cd mm && make clean
+	cd device && make clean
 	rm -rf kernel.bin
 	rm -rf kernel.elf
 	rm -rf ./bx_enh_dbg.ini

@@ -23,6 +23,7 @@ void kprintf(const char *fmt, ...) {
 void kprintln(const char *fmt, ...) {
     kprintf(fmt);
     disp_str("\n");
+    disp_pos += screen_col;
 }
 
 void spanic(const char *file, int line, const char *func, const char *cond) {

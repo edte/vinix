@@ -52,7 +52,6 @@ void init_idt(void) {
     irq_install(IRQ18_MC, exception_handler_machine_check);
     irq_install(IRQ19_XM, exception_handler_smd_exception);
     irq_install(IRQ20_VE, exception_handler_virtual_exception);
-
     irq_install(IRQ_PIC_M_TIMER, exception_handler_timer);
     irq_install(IRQ_PIC_M_KERBOARD, exception_handler_keyboard);
 

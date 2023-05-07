@@ -15,4 +15,6 @@ typedef unsigned long uint64_t;
 #define true 1
 #define false 0
 
+#define NULL 0
+
 #endif /* _ORANGES_TYPE_H_ */
