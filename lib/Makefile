@@ -7,7 +7,7 @@ ASM_FLAGS	:= -I ../include/  -f elf64
 CC_FLAGS 	:= -mcmodel=large  -fno-stack-protector -fno-builtin -m64 -c
 
 # var
-TARGET 	:=  bitmap.o list.o 
+TARGET 	:=  bitmap.o list.o buffer.o 
 
 # rules
 
@@ -24,6 +24,10 @@ bitmap.o: bitmap.c
 	$(CC) $(CC_FLAGS) -o $@ $<
 
 list.o: list.c
+	$(CC) $(CC_FLAGS) -o $@ $<
+
+
+buffer.o: buffer.c
 	$(CC) $(CC_FLAGS) -o $@ $<
 
 .PHONY: clean

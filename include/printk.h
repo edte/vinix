@@ -3,7 +3,6 @@
 
 #include "font.h"
 #include "linkage.h"
-#include "spinlock.h"
 #include <stdarg.h>
 
 // 坐标
@@ -19,8 +18,6 @@ typedef struct {
 
     unsigned int *FB_addr;
     unsigned long FB_length;
-
-    spinlock_T printk_lock;
 } position;
 
 #define do_div(n, base)                                                                                                                              \
@@ -56,7 +53,6 @@ static char buf[4096] = {0};
 
 static position Pos;
 
-void putchar(unsigned int *fb, int Xsize, int x, int y, unsigned int FRcolor, unsigned int BKcolor, unsigned char font);
 
 int skip_atoi(const char **s);
 
@@ -64,15 +60,6 @@ static char *number(char *str, long num, int base, int size, int precision, int 
 
 int vsprintf(char *buf, const char *fmt, va_list args);
 
-// 清屏
-void clear();
 
-int kprintf(const char *fmt, ...);
-int kprintln(const char *fmt, ...);
-
-int kprintf_color(unsigned int FRcolor, unsigned int BKcolor, const char *fmt, ...);
-int kprintln_color(unsigned int FRcolor, unsigned int BKcolor, const char *fmt, ...);
-
-void init_screen();
 
 #endif

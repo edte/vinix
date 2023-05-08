@@ -1,4 +1,5 @@
 #include "../include/printk.h"
+#include "../include/kprint.h"
 #include "../include/lib.h"
 #include "../include/linkage.h"
 #include "../include/spinlock.h"

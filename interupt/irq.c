@@ -2,8 +2,10 @@
 #include "../include/asm.h"
 #include "../include/gdt.h"
 #include "../include/idt.h"
-#include "../include/printk.h"
+#include "../include/keyboard.h"
+#include "../include/kprint.h"
 #include "../include/time.h"
+#include "../include/buffer.h"
 
 static void dump_core_regs(irq_frame_t *frame) {
     kprintf("rax:0x%x\n", frame->rax);
@@ -71,9 +73,11 @@ extern void do_handler_timer() {
 
 extern void do_handler_keyboard() {
     outb(0x20, 0x61);
-    uint16_t scancode = 0;
-    scancode = inb(0x60);
-    kprintf("\n%d\n", scancode);
+
+    buffer_put(&kb_buf, inb(0x60));
+    key_pressed = 1;
+
+    // kprintf("\n%d\n", scancode);
     outb(0x20, 0x20);
     outb(0xa0, 0x20);
 }
