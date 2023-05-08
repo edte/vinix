@@ -4,10 +4,10 @@ CC 			:= gcc
 
 # Flags
 ASMKFLAGS	:= -I ../include/  -f elf64
-CC_FLAGS 	:=  -I ../include/ -mcmodel=large  -fno-stack-protector -fno-builtin -m64 -c
+CC_FLAGS 	:=  -I ../include/ -mcmodel=large -static -fno-stack-protector -fno-builtin -m64 -c
 
 # var
-TARGET 		:=      kprint.o time.o keyboard.o  
+TARGET 		:=       time.o keyboard.o printk.o 
 
 # rules
 
@@ -21,6 +21,9 @@ time.o: time.c
 	$(CC) $(CC_FLAGS) -o $@ $<
 
 keyboard.o: keyboard.c
+	$(CC) $(CC_FLAGS) -o $@ $<
+
+printk.o: printk.c
 	$(CC) $(CC_FLAGS) -o $@ $<
 
 .PHONY: clean

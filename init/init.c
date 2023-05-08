@@ -3,39 +3,36 @@
 #include "../include/idt.h"
 #include "../include/irq.h"
 #include "../include/kprint.h"
+#include "../include/lib.h"
 #include "../include/memory.h"
+#include "../include/printk.h"
 #include "../include/time.h"
 #include "../include/type.h"
 
-extern void kernel_init();
+void kernel_main();
 
 void kernel_init(void) {
-    clear();
     init_gdt();
     init_idt();
+    init_screen();
+    init_memory();
     init_time();
     irq_enable_global();
-    irq_disable(0x20);
+    // irq_disable(0x20);
     // irq_disable(0x21);
 
-    goto entry;
-
-entry:
-
-    return;
+    kernel_main();
 }
 
 void kernel_main(void) {
-    // int i = 1 / 0;
-
     kprintln("enter kernel main");
+    // kprintf("%d\n", 10);
 
-    // int *addr = (int *)0xb8000;
-    // *((char *)addr + 5) = '9';
+    // int i = 2 / 0;
+    // for (int j = 0; j < 100; j++) {
+    //     kprintf("%d\n", sys_tick);
+    // }
 
-    // sprintf("hello wolrd");
-    // sprintf("hello:%x", 01234);
-    // printf("hello: %s", "world");
-
-    hlt();
+    while (1)
+        ;
 }

@@ -2,35 +2,35 @@
 #include "../include/asm.h"
 #include "../include/gdt.h"
 #include "../include/idt.h"
-#include "../include/kprint.h"
+#include "../include/printk.h"
 #include "../include/time.h"
 
 static void dump_core_regs(irq_frame_t *frame) {
-    kprintln("rax:0x%x", frame->rax);
-    kprintln("rbx:0x%x", frame->rbx);
-    kprintln("rcx:0x%x", frame->rcx);
-    kprintln("rdx:0x%x", frame->rdx);
-    kprintln("rbp:0x%x", frame->rbp);
-    kprintln("rsp:0x%x", frame->rsp);
-    kprintln("rsi:0x%x", frame->rsi);
-    kprintln("rdi:0x%x", frame->rdi);
-    kprintln("r8:0x%x", frame->r8);
-    kprintln("r9:0x%x", frame->r9);
-    kprintln("r10:0x%x", frame->r10);
-    kprintln("r11:0x%x", frame->r11);
-    kprintln("r12:0x%x", frame->r12);
-    kprintln("r13:0x%x", frame->r13);
-    kprintln("r14:0x%x", frame->r14);
-    kprintln("r15:0x%x", frame->r15);
-    kprintln("cs:0x%x", frame->cs);
-    kprintln("rflags:0x%x", frame->rflags);
+    kprintf("rax:0x%x\n", frame->rax);
+    kprintf("rbx:0x%x\n", frame->rbx);
+    kprintf("rcx:0x%x\n", frame->rcx);
+    kprintf("rdx:0x%x\n", frame->rdx);
+    kprintf("rbp:0x%x\n", frame->rbp);
+    kprintf("rsp:0x%x\n", frame->rsp);
+    kprintf("rsi:0x%x\n", frame->rsi);
+    kprintf("rdi:0x%x\n", frame->rdi);
+    kprintf("r8:0x%x\n", frame->r8);
+    kprintf("r9:0x%x\n", frame->r9);
+    kprintf("r10:0x%x\n", frame->r10);
+    kprintf("r11:0x%x\n", frame->r11);
+    kprintf("r12:0x%x\n", frame->r12);
+    kprintf("r13:0x%x\n", frame->r13);
+    kprintf("r14:0x%x\n", frame->r14);
+    kprintf("r15:0x%x\n", frame->r15);
+    kprintf("cs:0x%x\n", frame->cs);
+    kprintf("rflags:0x%x\n", frame->rflags);
 }
 
 static void do_default_handler(irq_frame_t *frame, const char *message) {
-    // disp_pos = 0;
     kprintln("");
     kprintln("-------------------------------------------------------");
-    kprintln("IRQ/Exception happend: %s", message);
+    kprintf("IRQ/Exception happend: %s\n", message);
+
     dump_core_regs(frame);
 
     // todo: 留等以后补充打印任务栈的内容
@@ -43,7 +43,6 @@ static void do_default_handler(irq_frame_t *frame, const char *message) {
 
 extern void do_handler_unknown(irq_frame_t *frame) { do_default_handler(frame, "Unknown exception."); }
 extern void do_handler_divider(irq_frame_t *frame) { do_default_handler(frame, "Divider Error."); }
-// extern void do_handler_divider(irq_frame_t *frame) { kprintln("divide 0"); }
 extern void do_handler_Debug(irq_frame_t *frame) { do_default_handler(frame, "Debug Exception"); }
 extern void do_handler_NMI(irq_frame_t *frame) { do_default_handler(frame, "NMI Interrupt."); }
 extern void do_handler_breakpoint(irq_frame_t *frame) { do_default_handler(frame, "Breakpoint."); }
@@ -65,14 +64,16 @@ extern void do_handler_virtual_exception(irq_frame_t *frame) { do_default_handle
 
 extern void do_handler_timer() {
     sys_tick++;
-    kprintln("%d", sys_tick);
+    // kprintf("\n%d\n", sys_tick);
+    outb(0x20, 0x20);
+    outb(0xa0, 0x20);
 };
 
 extern void do_handler_keyboard() {
     outb(0x20, 0x61);
-    uint16_t scancode = inb(0x60);
-    kprintln("");
-    kprintln("%d", scancode);
+    uint16_t scancode = 0;
+    scancode = inb(0x60);
+    kprintf("\n%d\n", scancode);
     outb(0x20, 0x20);
     outb(0xa0, 0x20);
 }

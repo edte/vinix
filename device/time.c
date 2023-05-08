@@ -3,18 +3,20 @@
 #include "../include/idt.h"
 #include "../include/irq.h"
 
-/* 把操作的计数器counter_no、读写锁属性rwl、计数器模式counter_mode写入模式控制寄存器并赋予初始值counter_value */
-static void frequency_set(uint8_t counter_port, uint8_t counter_no, uint8_t rwl, uint8_t counter_mode, uint16_t counter_value) {
-    /* 往控制字寄存器端口0x43中写入控制字 */
-    outb(PIT_CONTROL_PORT, (uint8_t)(counter_no << 6 | rwl << 4 | counter_mode << 1));
-    /* 先写入counter_value的低8位 */
-    outb(counter_port, (uint8_t)counter_value);
-    /* 再写入counter_value的高8位 */
-    outb(counter_port, (uint8_t)counter_value >> 8);
-}
-
 /* 初始化PIT8253 */
 void init_time() {
-    /* 设置8253的定时周期,也就是发中断的周期 */
-    frequency_set(CONTRER0_PORT, COUNTER0_NO, READ_WRITE_LATCH, COUNTER_MODE, COUNTER0_VALUE);
+    uint32_t reload_count = PIT_OSC_FREQ / (1000.0 / OS_TICK_MS);
+
+    outb(PIT_COMMAND_MODE_PORT, PIT_CHANNLE0 | PIT_LOAD_LOHI | PIT_MODE0);
+    outb(PIT_CHANNEL0_DATA_PORT, reload_count & 0xFF);        // 加载低8位
+    outb(PIT_CHANNEL0_DATA_PORT, (reload_count >> 8) & 0xFF); // 再加载高8位
+}
+
+u64 get_ticks() { return sys_tick; }
+
+void milli_delay(int milli_sec) {
+    int t = get_ticks();
+
+    while (((get_ticks() - t) * 1000 / HZ) < milli_sec) {
+    }
 }

@@ -24,32 +24,25 @@ void init_gdt(void) {
     }
 
     // 内核代码段
-    gdt_entry_set(SELECTOR_KERNEL_CODE, 0x00000000, 0xFFFFFFFF,
-                  SEG_P_PRESENT | SEG_DPL0 | SEG_S_NORMAL | SEG_TYPE_CODE | SEG_TYPE_RW | SEG_L_64Bit);
+    gdt_entry_set(SELECTOR_KERNEL_CODE, 0x00000000, 0xFFFFFFFF, SEG_P_PRESENT | SEG_DPL0 | SEG_S_NORMAL | SEG_TYPE_CODE | SEG_TYPE_RW | SEG_L_64Bit);
 
     // 内核数据段
-    gdt_entry_set(SELECTOR_KERNEL_DATA, 0x00000000, 0xFFFFFFFF,
-                  SEG_P_PRESENT | SEG_DPL0 | SEG_S_NORMAL | SEG_TYPE_DATA | SEG_TYPE_RW | SEG_L_64Bit);
+    gdt_entry_set(SELECTOR_KERNEL_DATA, 0x00000000, 0xFFFFFFFF, SEG_P_PRESENT | SEG_DPL0 | SEG_S_NORMAL | SEG_TYPE_DATA | SEG_TYPE_RW | SEG_L_64Bit);
 
     // 用户代码段
-    gdt_entry_set(SELECTOR_USER_CODE, 0x00000000, 0xFFFFFFFF,
-                  SEG_P_PRESENT | SEG_DPL3 | SEG_S_NORMAL | SEG_TYPE_CODE | SEG_TYPE_RW | SEG_L_64Bit);
+    gdt_entry_set(SELECTOR_USER_CODE, 0x00000000, 0xFFFFFFFF, SEG_P_PRESENT | SEG_DPL3 | SEG_S_NORMAL | SEG_TYPE_CODE | SEG_TYPE_RW | SEG_L_64Bit);
 
     // 用户数据段
-    gdt_entry_set(SELECTOR_USER_DATA, 0x00000000, 0xFFFFFFFF,
-                  SEG_P_PRESENT | SEG_DPL3 | SEG_S_NORMAL | SEG_TYPE_DATA | SEG_TYPE_RW | SEG_L_64Bit);
+    gdt_entry_set(SELECTOR_USER_DATA, 0x00000000, 0xFFFFFFFF, SEG_P_PRESENT | SEG_DPL3 | SEG_S_NORMAL | SEG_TYPE_DATA | SEG_TYPE_RW | SEG_L_64Bit);
 
     // 内核 TSS 段
-    gdt_entry_set(SELECTOR_TSS, 0x00000000, 0xFFFFFFFF,
-                  SEG_P_PRESENT | SEG_DPL0 | SEG_S_NORMAL | SEG_TYPE_DATA | SEG_TYPE_RW | SEG_L_64Bit);
+    gdt_entry_set(SELECTOR_TSS, 0x00000000, 0xFFFFFFFF, SEG_P_PRESENT | SEG_DPL0 | SEG_S_NORMAL | SEG_TYPE_DATA | SEG_TYPE_RW | SEG_L_64Bit);
 
     // 内核显存段
-    gdt_entry_set(SELECTOR_VIDEO, 0x00000000, 0xFFFFFFFF,
-                  SEG_P_PRESENT | SEG_DPL0 | SEG_S_NORMAL | SEG_TYPE_DATA | SEG_TYPE_RW | SEG_L_64Bit);
+    gdt_entry_set(SELECTOR_VIDEO, 0x00000000, 0xFFFFFFFF, SEG_P_PRESENT | SEG_DPL0 | SEG_S_NORMAL | SEG_TYPE_DATA | SEG_TYPE_RW | SEG_L_64Bit);
 
     // 内核栈段
-    gdt_entry_set(SELECTOR_KERNEL_STACK, 0x00000000, 0xFFFFFFFF,
-                  SEG_P_PRESENT | SEG_DPL0 | SEG_S_NORMAL | SEG_TYPE_DATA | SEG_TYPE_RW | SEG_L_64Bit);
+    gdt_entry_set(SELECTOR_KERNEL_STACK, 0x00000000, 0xFFFFFFFF, SEG_P_PRESENT | SEG_DPL0 | SEG_S_NORMAL | SEG_TYPE_DATA | SEG_TYPE_RW | SEG_L_64Bit);
 
     // 设置 gdt 指针
     gdt_pointer.base = (u64)gdt_table;
@@ -57,4 +50,11 @@ void init_gdt(void) {
 
     // 加载gdt
     lgdt();
+
+    // 设置段寄存器
+    write_ds(SELECTOR_KERNEL_DATA);
+    write_es(SELECTOR_KERNEL_DATA);
+    write_fs(SELECTOR_KERNEL_DATA);
+    write_gs(SELECTOR_VIDEO);
+    write_ss(SELECTOR_KERNEL_STACK);
 }

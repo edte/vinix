@@ -7,7 +7,7 @@ ASM_FLAGS	:= -I ../include/  -f elf64
 CC_FLAGS 	:= -mcmodel=large  -fno-stack-protector -fno-builtin -m64 -c
 
 # var
-TARGET 	:= klib.o screen.o bitmap.o list.o 
+TARGET 	:=  bitmap.o list.o 
 
 # rules
 

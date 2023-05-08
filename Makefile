@@ -32,8 +32,10 @@ kernel.bin: kernel.elf
 
 # TODO: 这里 ld 时，-e 指定入口程序失败，只能手动把 head 作为第一个链接的文件来跑，之后想办法解决
 kernel.elf: 
-	echo $(OBJECTS)
-	$(LD) $(LDFLAGS) ./init/head.o $(OBJECTS) -o $@
+	# echo $(OBJECTS)
+	# $(LD) $(LDFLAGS)  $(OBJECTS) -o $@
+
+	ld -Ttext 0x100000  -b elf64-x86-64 -z muldefs -T kernel.lds -e _start  ./init/head.o ./lib/list.o    ./interupt/irq.o ./interupt/idt.o ./interupt/irq_handler.o ./mm/memory.o ./device/printk.o  ./device/keyboard.o ./device/time.o ./init/init.o  ./cpu/gdt.o -o kernel.elf
 
 flash:
 	sudo dd if=boot/boot.bin   of=$(DISK) bs=512 conv=notrunc count=1 

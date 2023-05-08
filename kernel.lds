@@ -4,22 +4,30 @@ ENTRY(_start)
 SECTIONS
 {
 
-	. = 0x100000;
+	. = 0xffff800000000000 + 0x100000;
 	.text :
 	{
 		_text = .;
 		*(.text)
-
 		_etext = .;
 	}
+
 	. = ALIGN(8);
+
 	.data :
 	{
 		_data = .;
-		*(.data)
-		
+		*(.data)		
 		_edata = .;
 	}
+
+	.rodata : 
+	{
+		_rodata = .;	
+		*(.rodata)
+		_erodata = .;
+	}
+
 	.bss :
 	{
 		_bss = .;
@@ -29,4 +37,3 @@ SECTIONS
 
 	_end = .;
 }
-

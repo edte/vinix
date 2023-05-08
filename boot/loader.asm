@@ -17,7 +17,7 @@ _start:
     call ReadMem
 
     ; [step 3] SVGA 相关信息处理
-    ; call ReadSVGA
+    call ReadSVGA
     
     ; [step 4] 开启 A20,进入保护模式
     ; 关中断
@@ -316,10 +316,10 @@ _start32:
     mov esp, ebp
 
     ; [step 2] 打印进入保护模式日志
-    mov ebx, EnterProtectMessage             ; 被打印字符的地址
-    mov ax, 4
-    mov cx,0
-    call DispStr32
+    ; mov ebx, EnterProtectMessage             ; 被打印字符的地址
+    ; mov ax, 4
+    ; mov cx,0
+    ; call DispStr32
  
     ; [step 3] 测试是否支持长模式 
 	call	if_enter_long_mode
@@ -493,10 +493,10 @@ _start64:
 	mov	esp,BASE_OF_STACK
 
     ; [step 2] 打印日志，进入 64 位
-    mov ebx, EnterLongModeMessage
-    mov eax, 5
-    mov ecx, 0
-    call DispStr64
+    ; mov ebx, EnterLongModeMessage
+    ; mov eax, 5
+    ; mov ecx, 0
+    ; call DispStr64
 
     ; [step 3] 读取 kernel 程序
     mov eax, 20 	                ; 第20个逻辑扇区开始
