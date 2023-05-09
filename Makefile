@@ -6,8 +6,8 @@ OBJCOPY := objcopy
 LDFLAGS		= -Ttext $(PHYSICAL_KERNEL_ADDR)  -b elf64-x86-64 -z muldefs -T kernel.lds -e _start 
 OBJCOPY_FLAGS  = -I elf64-x86-64 -S -R ".eh_frame" -R ".comment" -O binary
 
-# DISK := /dev/sdc
-DISK := os.img
+DISK := /dev/sdc
+# DISK := os.img
 PHYSICAL_KERNEL_ADDR = 0x100000
 OBJECTS = $(shell find . -type f -name '*.o')
 

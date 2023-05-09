@@ -23,4 +23,7 @@ device/time.o
 init/init.o 
 init/head.o 
 cpu/gdt.o
-
+device/printk.o
+device/tty.o
+init/head.s
+lib/buffer.o

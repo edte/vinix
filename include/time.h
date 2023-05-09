@@ -3,7 +3,7 @@
 
 #include "type.h"
 
-static uint64_t sys_tick = 0; // 系统启动后的tick数量
+extern uint64_t sys_tick; // 系统启动后的tick数量
 
 #define PIT_OSC_FREQ 1193182 // 定时器时钟
 #define OS_TICK_MS 10        // 每毫秒的时钟数
@@ -19,6 +19,14 @@ static uint64_t sys_tick = 0; // 系统启动后的tick数量
 
 // 频率
 #define HZ 100
+
+#define millisecond 1
+#define second 1000
+#define minute second*60
+#define hour minute*60
+#define day hour*60
+#define week day*7
+#define year day*315
 
 void init_time(void);
 

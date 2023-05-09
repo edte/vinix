@@ -2,6 +2,9 @@
 #include "../include/asm.h"
 #include "../include/idt.h"
 #include "../include/irq.h"
+#include "../include/kprint.h"
+
+uint64_t sys_tick = 0; // 系统启动后的tick数量
 
 /* 初始化PIT8253 */
 void init_time() {

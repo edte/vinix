@@ -7,6 +7,7 @@
 #include "../include/time.h"
 #include "../include/buffer.h"
 
+
 static void dump_core_regs(irq_frame_t *frame) {
     kprintf("rax:0x%x\n", frame->rax);
     kprintf("rbx:0x%x\n", frame->rbx);

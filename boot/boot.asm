@@ -9,6 +9,7 @@ _start:
     ; [step 1] 初始化寄存器
     mov ax,cs				
     mov ss,ax
+    mov ds,ax
     mov es,ax
     mov ss,ax
     mov fs,ax
@@ -36,10 +37,19 @@ _start:
 	int	10h
 
     ; [step 5] 读取 loader 程序
-    mov eax, 0x1 	                ; 第1个逻辑扇区开始
-    mov ebx, PHYSICAL_LOADER_ADDR   ; 内存地址
-    mov ecx, 10   	                ; 读取10个扇区, 5k 大小限制
+    mov ax, 0x1 	                ; 第1个逻辑扇区开始
+    mov bx, PHYSICAL_LOADER_ADDR   ; 内存地址
+    mov cx, 10   	                ; 读取10个扇区, 5k 大小限制
     call ReadLBA16
+
+
+    ; [step 4] 显示 boot
+	mov	ax,	1301h
+	mov	bx,	000fh
+	mov	dx,	0000h
+	mov	cx,	10
+	mov	bp,	StartBootMessage
+	int	10h
 
     ; [step 6] 跳转到 loader 程序
     jmp BaseOfLoader:OffsetOfLoader
@@ -60,7 +70,7 @@ ReadLBA16:
       mov al,cl
       out dx,al            ; 读取的扇区数
 
-      mov eax,esi	       ; 恢复ax
+      mov ax,si	       ; 恢复ax
 
 ; [step 2] 将LBA地址存入0x1f3 ~ 0x1f6
       ;LBA地址7~0位写入端口0x1f3
@@ -69,16 +79,16 @@ ReadLBA16:
 
       ;LBA地址15~8位写入端口0x1f4
       mov cl,8
-      shr eax,cl
+      shr ax,cl
       mov dx,0x1f4
       out dx,al
 
       ;LBA地址23~16位写入端口0x1f5
-      shr eax,cl
+      shr ax,cl
       mov dx,0x1f5
       out dx,al
 
-      shr eax,cl
+      shr ax,cl
       and al,0x0f	   ; lba第24~27位
       or al,0xe0	   ; 设置7～4位为1110,表示lba模式
       mov dx,0x1f6
@@ -107,7 +117,7 @@ ReadLBA16:
 
   .go_on_read:
       in ax,dx
-      mov [bx],ax
+      mov ds:[bx],ax
       add bx,2		  
       loop .go_on_read
       ret
